@@ -245,6 +245,8 @@ namespace SimplerSNMP
         }
 
         // add ez-edge systems to tree-view
+
+        public bool IsSelected { get; set; }
         private void treeView_Loaded(object sender, RoutedEventArgs e)
         {
             // ... Create a TreeViewItem.
@@ -277,17 +279,16 @@ namespace SimplerSNMP
                     TreeViewItem treeItem = null;
                     treeItem = new TreeViewItem();
                     treeItem.Header = dr[0];
+                    treeItem.IsSelected = true;
                     tree.Items.Add(treeItem);
+                    
                     
                 }
 
                 // ... Get TreeView reference and add both items.
-                
-
-                
-
-
-
+                TreeViewItem tvi = treeView.ItemContainerGenerator.Items[0] as TreeViewItem;
+                tvi.IsSelected = true;
+               
             }
             catch (IOException  )
             {
