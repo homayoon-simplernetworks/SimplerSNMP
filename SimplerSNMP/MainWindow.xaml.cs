@@ -271,18 +271,18 @@ namespace SimplerSNMP
 
                 
                 var tree = sender as TreeView;
-                int i = 0;
+                
                 foreach (DataRow dr in dt.Rows)
                 {
                     TreeViewItem treeItem = null;
                     treeItem = new TreeViewItem();
                     treeItem.Header = dr[0];
                     tree.Items.Add(treeItem);
-                    i++;
+                    
                 }
 
                 // ... Get TreeView reference and add both items.
-               
+                
 
                 
 
@@ -886,38 +886,57 @@ namespace SimplerSNMP
 
         private void createCross_Click(object sender, RoutedEventArgs e)
         {
-            string originCard = fromCard.Text;
-            string originPort = fromPort.Text;
-            string destCard = toCard.Text;
-            string destPort = toPort.Text;
-            string scrossNumber = crossNumber.Text;
+            try
+            {
+                string originCard = fromCard.Text;
+                string originPort = fromPort.Text;
+                string destCard = toCard.Text;
+                string destPort = toPort.Text;
+                string scrossNumber = crossNumber.Text;
 
-            //string ipAdress = "192.168.3.115";
-            var item = treeView.SelectedItem as TreeViewItem;
-            
-            string ipAdress = item.Header.ToString();
-            int sPort = 161;
+                //string ipAdress = "192.168.3.115";
+                var item = treeView.SelectedItem as TreeViewItem;
 
-            Task task = new Task(() => { createCrossConnection(ipAdress, sPort, originCard, originPort, destCard, destPort, scrossNumber); });
-            task.Start();
+                string ipAdress = item.Header.ToString();
+                int sPort = 161;
+
+                Task task = new Task(() => { createCrossConnection(ipAdress, sPort, originCard, originPort, destCard, destPort, scrossNumber); });
+                task.Start();
+            }
+            catch (Exception)
+            {
+
+
+                pleaseSelectEz pl = new pleaseSelectEz();
+                pl.Show();
+            }
         }
 
         private void delCross_Click(object sender, RoutedEventArgs e)
         {
-            string originCard = fromCard.Text;
-            string originPort = fromPort.Text;
-            string destCard = toCard.Text;
-            string destPort = toPort.Text;
-            string scrossNumber = crossNumber.Text;
+            try
+            {
+                string originCard = fromCard.Text;
+                string originPort = fromPort.Text;
+                string destCard = toCard.Text;
+                string destPort = toPort.Text;
+                string scrossNumber = crossNumber.Text;
 
-            //string ipAdress = "192.168.3.115";
-            var item = treeView.SelectedItem as TreeViewItem;
+                //string ipAdress = "192.168.3.115";
+                var item = treeView.SelectedItem as TreeViewItem;
 
-            string ipAdress = item.Header.ToString();
-            int sPort = 161;
+                string ipAdress = item.Header.ToString();
+                int sPort = 161;
 
-            Task task = new Task(() => { createCrossConnectionDel(ipAdress, sPort, originCard, originPort, destCard, destPort, scrossNumber); });
-            task.Start();
+                Task task = new Task(() => { createCrossConnectionDel(ipAdress, sPort, originCard, originPort, destCard, destPort, scrossNumber); });
+                task.Start();
+            }
+            catch (Exception)
+            {
+
+                pleaseSelectEz pl = new pleaseSelectEz();
+                pl.Show();
+            }
         }
 
 
@@ -1097,12 +1116,22 @@ namespace SimplerSNMP
 
         private void loadCrossTable_Click(object sender, RoutedEventArgs e)
         {
-            var item = treeView.SelectedItem as TreeViewItem;
+            try
+            {
+                var item = treeView.SelectedItem as TreeViewItem;
 
-            string ipAdress = item.Header.ToString();
+                string ipAdress = item.Header.ToString();
+                Task task = new Task(() => { tableBrowserNext(ipAdress, 161, "public", "1.3.6.1.4.1.4987.1.1.1", 16); });
+                task.Start();
+            }
+            catch (Exception)
+            {
 
-            Task task = new Task(() => { tableBrowserNext(ipAdress, 161, "public", "1.3.6.1.4.1.4987.1.1.1", 16); });
-            task.Start();
+                pleaseSelectEz pl = new pleaseSelectEz();
+                pl.Show();
+            }
+
+           
 
         }
 
@@ -1115,10 +1144,20 @@ namespace SimplerSNMP
 
         private void delCrossAll_Click(object sender, RoutedEventArgs e)
         {
-            var item = treeView.SelectedItem as TreeViewItem;
-            string ipAddress = item.Header.ToString();
-            Task task = new Task(() => { dellAllCross(ipAddress); });
-            task.Start();
+            try
+            {
+                var item = treeView.SelectedItem as TreeViewItem;
+                string ipAddress = item.Header.ToString();
+                Task task = new Task(() => { dellAllCross(ipAddress); });
+                task.Start();
+            }
+            catch (Exception)
+            {
+
+
+                pleaseSelectEz pl = new pleaseSelectEz();
+                pl.Show();
+            }
         }
         public void dellAllCross(string ipAddress)
         {
