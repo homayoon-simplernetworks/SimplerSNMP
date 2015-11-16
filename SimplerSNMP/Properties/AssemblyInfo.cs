@@ -10,7 +10,7 @@ using System.Windows;
 [assembly: AssemblyTitle("SimplerSNMP")]
 [assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("")]
+[assembly: AssemblyCompany("Simpler Networks S.e.n.C.")]
 [assembly: AssemblyProduct("SimplerSNMP")]
 [assembly: AssemblyCopyright("Copyright ©  2015")]
 [assembly: AssemblyTrademark("")]
