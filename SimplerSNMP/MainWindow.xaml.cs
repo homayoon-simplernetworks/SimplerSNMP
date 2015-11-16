@@ -351,7 +351,7 @@ namespace SimplerSNMP
 
         
 
-        public void tableBrowserNext(string tHost, int tPort,string tCommunity, string tOID ,int columnNumber)
+        public void tableBrowserNext(string tHost, int tPort,string tCommunity, string tOID ,int columnNumber, DataGrid dg)
         {
             // SNMP community name
             OctetString community = new OctetString(tCommunity);
@@ -493,8 +493,8 @@ namespace SimplerSNMP
 
                             Dispatcher.BeginInvoke(DispatcherPriority.Normal, new Action(() =>
                             {
-                                tableBrowserGrid.ItemsSource = null;
-                                tableBrowserGrid.ItemsSource = dataTable.DefaultView;
+                                dg.ItemsSource = null;
+                                dg.ItemsSource = dataTable.DefaultView;
 
 
                             }));
@@ -1259,7 +1259,7 @@ namespace SimplerSNMP
                 var item = treeView.SelectedItem as TreeViewItem;
 
                 string ipAdress = item.Header.ToString();
-                Task task = new Task(() => { tableBrowserNext(ipAdress, 161, "public", "1.3.6.1.4.1.4987.1.1.1", 16); });
+                Task task = new Task(() => { tableBrowserNext(ipAdress, 161, "public", "1.3.6.1.4.1.4987.1.1.1", 16 , tableBrowserGrid); });
                 task.Start();
             }
             catch (Exception)
@@ -1346,6 +1346,23 @@ namespace SimplerSNMP
             throw new Exception("Local IP Address Not Found!");
         }
 
+        private void loadAlarmTable_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                var item = treeView.SelectedItem as TreeViewItem;
+
+                string ipAdress = item.Header.ToString();
+                Task task = new Task(() => { tableBrowserNext(ipAdress, 161, "public", "1.3.6.1.4.1.4987.1.11.4.1", 6 , tableBrowserAlarm); });
+                task.Start();
+            }
+            catch (Exception)
+            {
+
+                pleaseSelectEz pl = new pleaseSelectEz();
+                pl.Show();
+            }
+        }
     } //main class
 
     class logHandler

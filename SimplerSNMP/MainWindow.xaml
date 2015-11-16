@@ -71,6 +71,16 @@
                     <Button x:Name="loadCrossTable" Content="load Cross Table" HorizontalAlignment="Left" Margin="0,1,0,0" VerticalAlignment="Top" Width="115" Click="loadCrossTable_Click"/>
                 </Grid>
             </TabItem>
+            <TabItem Header="System Alarms" HorizontalAlignment="Left" Height="24" VerticalAlignment="Top" Width="102" Margin="-10,0,-5,0">
+                <Grid Background="#FFE5E5E5">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition/>
+                        <ColumnDefinition Width="0*"/>
+                    </Grid.ColumnDefinitions>
+                    <Button x:Name="loadAlarmTable" Content="load Alarm Table" HorizontalAlignment="Left" Margin="0,1,0,0" VerticalAlignment="Top" Width="115" Click="loadAlarmTable_Click" Height="20"/>
+                    <DataGrid x:Name="tableBrowserAlarm" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="0,26,0,0"/>
+                </Grid>
+            </TabItem>
         </TabControl>
         <TabControl x:Name="tabControl1" Margin="10,539,10,8">
             <TabControl.ItemBindingGroup>
