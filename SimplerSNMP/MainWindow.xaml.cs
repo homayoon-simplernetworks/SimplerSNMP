@@ -134,6 +134,34 @@ namespace SimplerSNMP
            dt.WriteXml(fn);
 
         }
+        public void removeSystems(string rHost, string fn)
+        {
+            
+            DataTable dt = new DataTable();
+            DataSet ds = new DataSet();
+            
+            try
+            {
+                ds.ReadXml(fn);
+                dt = ds.Tables[0];
+            }
+            catch (Exception)
+            {
+                return;               
+            }
+            DataRow[] foundRows;
+            foundRows = dt.Select("Host Like '"+ rHost + "%'");
+            
+
+            foreach (var row in foundRows)
+            {
+                dt.Rows.Remove(row); 
+            }
+
+           
+            dt.WriteXml(fn);
+
+        }
     } 
     #endregion
     public class XMLtoDataset
@@ -247,17 +275,11 @@ namespace SimplerSNMP
         // add ez-edge systems to tree-view
 
         public bool IsSelected { get; set; }
-        private void treeView_Loaded(object sender, RoutedEventArgs e)
+
+
+
+        private void treeviewLoader(TreeView tv , string fn)
         {
-            // ... Create a TreeViewItem.
-
-            /*
-
-            ezSystemProvider it = new ezSystemProvider();
-            var ezSystemList = new List<ezEdgeSystems>();
-            ezSystemList = it.GetSystems("XMLfilePath"); //to do: code for read from XML file will be add
-
-            */
             DataTable dt = new DataTable();
             DataSet ds = new DataSet();
 
@@ -268,51 +290,44 @@ namespace SimplerSNMP
 
             try
             {
-                ds.ReadXml("ez_systems.xml");
+                ds.ReadXml(fn);
                 dt = ds.Tables[0];
 
+
+                List<TreeViewItem> itl = new List<TreeViewItem>();
+
+                tv.Items.Clear();
                 
-                var tree = sender as TreeView;
-                
+                             
+
                 foreach (DataRow dr in dt.Rows)
                 {
                     TreeViewItem treeItem = null;
                     treeItem = new TreeViewItem();
                     treeItem.Header = dr[0];
                     treeItem.IsSelected = true;
-                    tree.Items.Add(treeItem);
-                    
-                    
+                    tv.Items.Add(treeItem);
+
+
                 }
 
                 // ... Get TreeView reference and add both items.
-                TreeViewItem tvi = treeView.ItemContainerGenerator.Items[0] as TreeViewItem;
+                TreeViewItem tvi = tv.ItemContainerGenerator.Items[0] as TreeViewItem;
                 tvi.IsSelected = true;
-               
+
             }
-            catch (IOException  )
+            catch (IOException)
             {
-               AddSystem ad = new AddSystem();
-               ad.Show();
+                AddSystem ad = new AddSystem();
+                ad.Show();
 
             }
-            /*
-                        
-            TreeViewItem treeItem = null;
+        }
 
-            // North America
-            treeItem = new TreeViewItem();
-            treeItem.Header = "North America";
-
-            foreach (ezEdgeSystems system in ezSystemList)
-            {
-                treeItem.Items.Add(new TreeViewItem() { Header = system.Host }); 
-            }
-
-            // ... Get TreeView reference and add both items.
+        private void treeView_Loaded(object sender, RoutedEventArgs e)
+        {
             var tree = sender as TreeView;
-
-            tree.Items.Add(treeItem); */
+            treeviewLoader(tree, "ez_systems.xml");
 
         }
 
@@ -1211,6 +1226,16 @@ namespace SimplerSNMP
                 result = crossConnectionDel(ipAddress, sPort, originCard, originPort, destCard, destPort);
                 
             }
+        }
+
+        private void removeSystem_Click(object sender, RoutedEventArgs e)
+        {
+            ezSystemProvider ezp = new ezSystemProvider();
+            var item = treeView.SelectedItem as TreeViewItem;
+
+            string rHost = item.Header.ToString();
+            ezp.removeSystems(rHost, "ez_systems.xml");
+            treeviewLoader(treeView, "ez_systems.xml");
         }
     } //main class
 

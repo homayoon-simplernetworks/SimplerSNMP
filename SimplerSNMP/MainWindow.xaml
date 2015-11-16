@@ -9,7 +9,7 @@
     <Grid Background="#FFB0BECF">
 
 
-        <TreeView x:Name="treeView" HorizontalAlignment="Left" Height="468" VerticalAlignment="Top" Width="158" Loaded="treeView_Loaded" SelectedItemChanged="treeView_SelectedItemChanged" Margin="10,66,0,0">
+        <TreeView x:Name="treeView" HorizontalAlignment="Left" Height="480" VerticalAlignment="Top" Width="158" Loaded="treeView_Loaded" SelectedItemChanged="treeView_SelectedItemChanged" Margin="10,54,0,0">
             <TreeView.ItemTemplate>
                 <HierarchicalDataTemplate ItemsSource="{Binding Children}">
                     <TextBlock Text="{Binding Name}" />
@@ -29,7 +29,7 @@
             </TreeView.ItemContainerStyle>
 
         </TreeView>
-        <Button x:Name="adNewSystem" Content="Add new system" HorizontalAlignment="Left" Margin="33,40,0,0" VerticalAlignment="Top" Width="110" RenderTransformOrigin="0.5,0.5" Click="adNewSystem_Click"/>
+        <Button x:Name="adNewSystem" Content="Add new system" HorizontalAlignment="Left" Margin="10,29,0,0" VerticalAlignment="Top" Width="93" RenderTransformOrigin="0.5,0.5" Click="adNewSystem_Click"/>
         <TextBox x:Name="LogBox" HorizontalAlignment="Left" Height="512" Margin="825,22,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="348" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto"/>
         <TabControl x:Name="tabControl" HorizontalAlignment="Left" Height="534" Margin="173,0,0,0" VerticalAlignment="Top" Width="647">
             <TabItem Header="CrossConnection" HorizontalAlignment="Right" Margin="0,-2,-0.2,0">
@@ -104,6 +104,7 @@
         </TabControl>
         <Label x:Name="label" Content="Systems List" HorizontalAlignment="Left" Margin="10,-2,0,0" VerticalAlignment="Top" Background="#FFE5E5E5" Width="158"/>
         <Label x:Name="label_Copy" Content="Command Lists" HorizontalAlignment="Left" Margin="825,-2,0,0" VerticalAlignment="Top" Background="#FFE5E5E5" Width="348"/>
+        <Button x:Name="removeSystem" Content="Remove" HorizontalAlignment="Left" Margin="108,29,0,0" VerticalAlignment="Top" Width="60" RenderTransformOrigin="0.5,0.5" Click="removeSystem_Click"/>
 
     </Grid>
 </Window>
