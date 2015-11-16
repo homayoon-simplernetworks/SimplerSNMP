@@ -30,7 +30,7 @@
 
         </TreeView>
         <Button x:Name="adNewSystem" Content="Add new system" HorizontalAlignment="Left" Margin="10,29,0,0" VerticalAlignment="Top" Width="93" RenderTransformOrigin="0.5,0.5" Click="adNewSystem_Click"/>
-        <TextBox x:Name="LogBox" HorizontalAlignment="Left" Height="512" Margin="825,22,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="348" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto"/>
+        <TextBox x:Name="LogBox" Height="512" Margin="825,22,10,0" TextWrapping="Wrap" VerticalAlignment="Top" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto"/>
         <TabControl x:Name="tabControl" HorizontalAlignment="Left" Height="534" Margin="173,0,0,0" VerticalAlignment="Top" Width="647">
             <TabItem Header="CrossConnection" HorizontalAlignment="Right" Margin="0,-2,-0.2,0">
                 <Grid Background="#FFE5E5E5">
@@ -72,13 +72,13 @@
                 </Grid>
             </TabItem>
         </TabControl>
-        <TabControl x:Name="tabControl1" HorizontalAlignment="Left" Height="303" Margin="173,539,0,0" VerticalAlignment="Top" Width="1000">
+        <TabControl x:Name="tabControl1" Margin="10,539,10,8">
             <TabControl.ItemBindingGroup>
                 <BindingGroup/>
             </TabControl.ItemBindingGroup>
             <TabItem Header="Traps">
                 <Grid Background="#FFE5E5E5">
-                    <TextBox x:Name="trapLoggerTextBox" HorizontalAlignment="Left" Height="217" Margin="10,48,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="974" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto"/>
+                    <TextBox x:Name="trapLoggerTextBox" Margin="10,48,19,19" TextWrapping="Wrap" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto"/>
                     <Button x:Name="filterApply" Content="Apply" HorizontalAlignment="Left" Margin="150,11,0,0" VerticalAlignment="Top" Width="74"/>
                     <TextBox x:Name="textBox2" HorizontalAlignment="Left" Height="23" Margin="10,11,0,0" TextWrapping="Wrap" Text="Filter" VerticalAlignment="Top" Width="120" RenderTransformOrigin="0.179,0.543"/>
                 </Grid>
