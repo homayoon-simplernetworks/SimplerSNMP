@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
+using System.Net.Sockets;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
@@ -23,7 +25,18 @@ namespace SimplerSNMP
         {
             InitializeComponent();
         }
-
+        public static string GetLocalIPAddress()
+        {
+            var host = Dns.GetHostEntry(Dns.GetHostName());
+            foreach (var ip in host.AddressList)
+            {
+                if (ip.AddressFamily == AddressFamily.InterNetwork)
+                {
+                    return ip.ToString();
+                }
+            }
+            throw new Exception("Local IP Address Not Found!");
+        }
         private void button_Click(object sender, RoutedEventArgs e)
         {
             XMLtoDataset xd = new XMLtoDataset();
@@ -43,9 +56,15 @@ namespace SimplerSNMP
                 if (window.GetType() == typeof(MainWindow))
                 {
                     (window as MainWindow).treeViewAdd(ipTextBox.Text);
+                    (window as MainWindow).addRemoveTrapdestination(sy.Host, sy.Port, GetLocalIPAddress(), sy.Read_Community, sy.Write_Community, 4);
                 }
                 
             }
+
+
+
+
+
             this.Close();
 
         }

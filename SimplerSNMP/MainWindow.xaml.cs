@@ -1104,6 +1104,100 @@ namespace SimplerSNMP
             }
         }
 
+        private string trapTable = "1.3.6.1.4.1.4987.1.11.5.1.3";
+
+        public string TrapTable
+        {
+            get
+            {
+                return trapTable;
+            }
+
+            set
+            {
+                trapTable = value;
+            }
+        }
+
+        public string addRemoveTrapdestination(string ipAdd, int sPort, string localIPaddress, string trapComminuty, string adminComminuty, int addRemove)
+        {
+            // Prepare target
+            UdpTarget target = new UdpTarget((IPAddress)new IpAddress(ipAdd), sPort, 15000, 0);
+            // Create a SET PDU
+            Pdu pdu = new Pdu(PduType.Set);
+
+
+
+            // Set sysLocation.0 to a new string
+           
+            
+
+            Dispatcher.BeginInvoke(DispatcherPriority.Normal, new Action(() =>
+            {
+                AppendTextToOutput("add system to trap destination :  (" + ipAdd + ") " );
+            }));
+
+
+            pdu.VbList.Add(new Oid(TrapTable + "." + localIPaddress + ".6.112.117.98.108.105.99"), new Integer32(addRemove));
+           
+
+            // Set Agent security parameters
+            AgentParameters aparam = new AgentParameters(SnmpVersion.Ver2, new OctetString("AdminPublic"));
+
+            // Response packet
+            SnmpV2Packet response;
+            try
+            {
+                // Send request and wait for response
+                response = target.Request(pdu, aparam) as SnmpV2Packet;
+
+                Dispatcher.BeginInvoke(DispatcherPriority.Normal, new Action(() =>
+                {
+                    AppendTextToOutput("response :  (" + ipAdd + ") " + response);
+                }));
+
+            }
+            catch (Exception ex)
+            {
+                // If exception happens, it will be returned here
+
+                Dispatcher.BeginInvoke(DispatcherPriority.Normal, new Action(() =>
+                {
+                    AppendTextToOutput(System.String.Format("Request failed with exception: {0} (" + ipAdd + ") ", ex.Message));
+                }));
+                return "error";
+            }
+            // Make sure we received a response
+            if (response == null)
+            {
+                Dispatcher.BeginInvoke(DispatcherPriority.Normal, new Action(() =>
+                {
+                    AppendTextToOutput("Error in sending SNMP request. (" + ipAdd + ") ");
+                }));
+                return "error";
+            }
+            else
+            {
+                // Check if we received an SNMP error from the agent
+                if (response.Pdu.ErrorStatus != 0)
+                {
+
+                    Dispatcher.BeginInvoke(DispatcherPriority.Normal, new Action(() =>
+                    {
+                        AppendTextToOutput(System.String.Format("(" + ipAdd + ")SNMP agent returned ErrorStatus {0} on index {1}",
+                        response.Pdu.ErrorStatus, response.Pdu.ErrorIndex));
+                    }));
+                    return "error";
+                }
+                else
+                {
+                    // Everything is ok. Agent will return the new value for the OID we changed
+                    return response.ToString();
+
+                }
+            }
+        }
+
 
         //syslog
 
@@ -1236,7 +1330,22 @@ namespace SimplerSNMP
             string rHost = item.Header.ToString();
             ezp.removeSystems(rHost, "ez_systems.xml");
             treeviewLoader(treeView, "ez_systems.xml");
+            addRemoveTrapdestination(rHost, 161 , GetLocalIPAddress(), "public", "AdminPublic", 6);
         }
+
+        public static string GetLocalIPAddress()
+        {
+            var host = Dns.GetHostEntry(Dns.GetHostName());
+            foreach (var ip in host.AddressList)
+            {
+                if (ip.AddressFamily == AddressFamily.InterNetwork)
+                {
+                    return ip.ToString();
+                }
+            }
+            throw new Exception("Local IP Address Not Found!");
+        }
+
     } //main class
 
     class logHandler
