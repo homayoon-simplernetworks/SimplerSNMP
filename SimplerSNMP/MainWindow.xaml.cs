@@ -409,8 +409,22 @@ namespace SimplerSNMP
                 pdu.VbList.Add(lastOidList);
 
                 // Make SNMP request
-                SnmpV1Packet result = (SnmpV1Packet)target.Request(pdu, param);
-                // You should catch exceptions in the Request if using in real application.
+                SnmpV1Packet result = null;
+
+                try
+                {
+                    result = (SnmpV1Packet)target.Request(pdu, param);
+                }
+                catch (Exception e)
+                {
+
+                    Dispatcher.BeginInvoke(DispatcherPriority.Normal, new Action(() =>
+                    {
+                        AppendTextToOutput("table browser : ("+ tHost + ") " + e.Message);
+                    }));
+                    lastOid = null;
+                }
+                
 
                 // If result is null then agent didn't reply or we couldn't parse the reply.
                 if (result != null)
@@ -424,7 +438,7 @@ namespace SimplerSNMP
 
                         Dispatcher.BeginInvoke(DispatcherPriority.Normal, new Action(() =>
                         {
-                            AppendTextToOutput("table browser : Error in SNMP reply.Error " + result.Pdu.ErrorStatus + " : " + result.Pdu.ErrorIndex);
+                            AppendTextToOutput("table browser : Error in SNMP reply.Error  (" + tHost + ") " + result.Pdu.ErrorStatus + " : " + result.Pdu.ErrorIndex);
                         }));
 
                         lastOid = null;
@@ -478,7 +492,7 @@ namespace SimplerSNMP
                 {
                     Dispatcher.BeginInvoke(DispatcherPriority.Normal, new Action(() =>
                     {
-                        AppendTextToOutput("table browser : No response received from SNMP agent.");
+                        AppendTextToOutput("table browser : No response received from SNMP agent. (" + tHost + ") ");
                     }));
                 }
                     
@@ -555,7 +569,21 @@ namespace SimplerSNMP
                 pdu.VbList.Add(lastOidList);
 
                 // Make SNMP request
-                SnmpV1Packet result = (SnmpV1Packet)target.Request(pdu, param);
+                SnmpV1Packet result = null;
+
+                try
+                {
+                    result = (SnmpV1Packet)target.Request(pdu, param);
+                }
+                catch (Exception e)
+                {
+
+                    Dispatcher.BeginInvoke(DispatcherPriority.Normal, new Action(() =>
+                    {
+                        AppendTextToOutput("table browser : " + e.Message);
+                    }));
+                    lastOid = null;
+                }
                 // You should catch exceptions in the Request if using in real application.
 
                 // If result is null then agent didn't reply or we couldn't parse the reply.
@@ -641,7 +669,7 @@ namespace SimplerSNMP
             {
                 // ... Handle a TreeViewItem.
                 var item = tree.SelectedItem as TreeViewItem;
-                this.Title = "Selected header: " + item.Header.ToString();
+                this.Title = "Selected System: " + item.Header.ToString();
             }
             else if (tree.SelectedItem is string)
             {
@@ -692,7 +720,7 @@ namespace SimplerSNMP
 
             Dispatcher.BeginInvoke(DispatcherPriority.Normal, new Action(() =>
             {
-                AppendTextToOutput("create jumper : " + crossJumper);
+                AppendTextToOutput("create jumper :  (" + ipAdd + ") " + crossJumper);
             }));
 
 
@@ -715,7 +743,7 @@ namespace SimplerSNMP
 
                 Dispatcher.BeginInvoke(DispatcherPriority.Normal, new Action(() =>
                 {
-                    AppendTextToOutput("response : " + response);
+                    AppendTextToOutput("response :  (" + ipAdd + ") " + response);
                 }));
 
             }
@@ -725,7 +753,7 @@ namespace SimplerSNMP
 
                 Dispatcher.BeginInvoke(DispatcherPriority.Normal, new Action(() =>
                 {
-                    AppendTextToOutput(System.String.Format("Request failed with exception: {0}", ex.Message));
+                    AppendTextToOutput(System.String.Format("Request failed with exception: {0} (" + ipAdd + ") ", ex.Message));
                 }));
                 return "error";
             }
@@ -734,7 +762,7 @@ namespace SimplerSNMP
             {
                 Dispatcher.BeginInvoke(DispatcherPriority.Normal, new Action(() =>
                 {
-                    AppendTextToOutput("Error in sending SNMP request.");
+                    AppendTextToOutput("Error in sending SNMP request. (" + ipAdd + ") ");
                 }));
                 return "error";
             }
@@ -746,7 +774,7 @@ namespace SimplerSNMP
 
                     Dispatcher.BeginInvoke(DispatcherPriority.Normal, new Action(() =>
                     {
-                        AppendTextToOutput(System.String.Format("SNMP agent returned ErrorStatus {0} on index {1}",
+                        AppendTextToOutput(System.String.Format("("+ipAdd + ")SNMP agent returned ErrorStatus {0} on index {1}",
                         response.Pdu.ErrorStatus, response.Pdu.ErrorIndex));
                     }));
                     return "error";
@@ -779,7 +807,7 @@ namespace SimplerSNMP
 
             Dispatcher.BeginInvoke(DispatcherPriority.Normal, new Action(() =>
             {
-                AppendTextToOutput("delete jumper : " + crossJumper);
+                AppendTextToOutput("delete jumper :  (" + ipAdd + ") " + crossJumper);
             }));
 
 
@@ -797,7 +825,7 @@ namespace SimplerSNMP
 
                 Dispatcher.BeginInvoke(DispatcherPriority.Normal, new Action(() =>
                 {
-                    AppendTextToOutput("response : " + response);
+                    AppendTextToOutput("response :  (" + ipAdd + ") " + response);
                 }));
 
             }
@@ -807,7 +835,7 @@ namespace SimplerSNMP
 
                 Dispatcher.BeginInvoke(DispatcherPriority.Normal, new Action(() =>
                 {
-                    AppendTextToOutput(System.String.Format("Request failed with exception: {0}", ex.Message));
+                    AppendTextToOutput(System.String.Format("Request failed with exception: {0} (" + ipAdd + ") ", ex.Message));
                 }));
                 return "error";
             }
@@ -816,7 +844,7 @@ namespace SimplerSNMP
             {
                 Dispatcher.BeginInvoke(DispatcherPriority.Normal, new Action(() =>
                 {
-                    AppendTextToOutput("Error in sending SNMP request.");
+                    AppendTextToOutput("Error in sending SNMP request. (" + ipAdd + ") ");
                 }));
                 return "error";
             }
@@ -828,7 +856,7 @@ namespace SimplerSNMP
 
                     Dispatcher.BeginInvoke(DispatcherPriority.Normal, new Action(() =>
                     {
-                        AppendTextToOutput(System.String.Format("SNMP agent returned ErrorStatus {0} on index {1}",
+                        AppendTextToOutput(System.String.Format(" (" + ipAdd + ") SNMP agent returned ErrorStatus {0} on index {1}",
                         response.Pdu.ErrorStatus, response.Pdu.ErrorIndex));
                     }));
                     return "error";
