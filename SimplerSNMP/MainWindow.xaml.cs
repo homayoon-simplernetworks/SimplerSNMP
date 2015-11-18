@@ -373,12 +373,14 @@ namespace SimplerSNMP
                 // ... Handle a TreeViewItem.
                 var item = tree.SelectedItem as TreeViewItem;
                 this.Title = "Selected System: " + item.Header.ToString();
+                selectionChangedMethod();
             }
             else if (tree.SelectedItem is string)
             {
                 // ... Handle a string.
                 this.Title = "Selected: " + tree.SelectedItem.ToString();
             }
+
         }
 
         private void adNewSystem_Click(object sender, RoutedEventArgs e)
@@ -1190,8 +1192,14 @@ namespace SimplerSNMP
 
         //to load table columns and OIds from XML file
 
-        public void tableBrowserNext(string tHost, int tPort, string tCommunity, string tOID, int columnNumber, DataGrid dg)
+        public void tableBrowserNext(string tHost, int tPort, string tCommunity, string tOID, int columnNumber, DataGrid dg )
         {
+            //clean table 
+            Dispatcher.BeginInvoke(DispatcherPriority.Normal, new Action(() =>
+            {
+                dg.ItemsSource = null;  
+            }
+            ));
             // SNMP community name
             OctetString community = new OctetString(tCommunity);
 
@@ -1244,6 +1252,10 @@ namespace SimplerSNMP
 
             // Pdu class used for all requests
             Pdu pdu = new Pdu(PduType.GetNext);
+            Dispatcher.BeginInvoke(DispatcherPriority.Normal, new Action(() =>
+            {
+                AppendTextToOutput("Start getting XC table for :  " + tHost);
+            }));
 
             // Loop through results
             while (lastOid != null)
@@ -1267,22 +1279,29 @@ namespace SimplerSNMP
 
                 try
                 {
+                    
                     result = (SnmpV1Packet)target.Request(pdu, param);
+                    
                 }
                 catch (Exception e)
                 {
+                    
 
                     Dispatcher.BeginInvoke(DispatcherPriority.Normal, new Action(() =>
                     {
-                        AppendTextToOutput("table browser : (" + tHost + ") " + e.Message);
+                        AppendTextToOutput("table browser ((in)) : (" + tHost + ") " + e.Message);
                     }));
                     lastOid = null;
+                    return;
                 }
 
 
                 // If result is null then agent didn't reply or we couldn't parse the reply.
                 if (result != null)
                 {
+
+
+                    
                     // ErrorStatus other then 0 is an error returned by 
                     // the Agent - see SnmpConstants for error definitions
                     if (result.Pdu.ErrorStatus != 0)
@@ -1321,6 +1340,9 @@ namespace SimplerSNMP
                             {
                                 // we have reached the end of the requested
                                 // MIB tree. Set lastOid to null and exit loop
+
+                               
+
                                 lastOid = null;
                             }
 
@@ -1334,9 +1356,10 @@ namespace SimplerSNMP
                             {
                                 dg.ItemsSource = null;
                                 dg.ItemsSource = dataTable.DefaultView;
-
+                                
 
                             }));
+
 
                         }
 
@@ -1352,14 +1375,17 @@ namespace SimplerSNMP
 
             }
 
-
+            Dispatcher.BeginInvoke(DispatcherPriority.Normal, new Action(() =>
+            {
+                AppendTextToOutput("we have reached the end of the XC requested MIB tree. ");
+            }));
 
             //
 
 
 
             target.Close();
-
+            
         }
 
         private void loadCrossTable_Click(object sender, RoutedEventArgs e)
@@ -1369,8 +1395,8 @@ namespace SimplerSNMP
                 var item = treeView.SelectedItem as TreeViewItem;
 
                 string ipAdress = item.Header.ToString();
-                Task task = new Task(() => { tableBrowserNext(ipAdress, 161, "public", "1.3.6.1.4.1.4987.1.1.1", 16, tableBrowserGrid); });
-                task.Start();
+                //Task task = new Task(() => { tableBrowserNext(ipAdress, 161, "public", "1.3.6.1.4.1.4987.1.1.1", 16, tableBrowserGrid); });
+                //task.Start();
             }
             catch (Exception)
             {
@@ -1392,71 +1418,96 @@ namespace SimplerSNMP
             xmlTestGrid.ItemsSource = dt.DefaultView;
         }
 
+        private void loadXcTableMethod()
+        {
+            var item = treeView.SelectedItem as TreeViewItem;
+            string ipAdress = item.Header.ToString();
+            if (xcTableThread != null && xcTableThread.IsAlive) xcTableThread.Abort();
+            xcTableThread = new Thread(new ThreadStart(() => { tableBrowserNext(ipAdress, 161, "public", "1.3.6.1.4.1.4987.1.1.1", 16, tableBrowserGrid); }));
+            xcTableThread.IsBackground = true;
+            xcTableThread.Start();
+        }
+
+        private void loadAlarmTableMethod()
+        {
+            var item = treeView.SelectedItem as TreeViewItem;
+
+            string ipAdress = item.Header.ToString();
+            if (systemAlarmThread != null && systemAlarmThread.IsAlive) systemAlarmThread.Abort();
+            systemAlarmThread = new Thread(new ThreadStart(() => { tableBrowserNext(ipAdress, 161, "public", "1.3.6.1.4.1.4987.1.11.4.1", 6, tableBrowserAlarm); }));
+            systemAlarmThread.IsBackground = true;
+            systemAlarmThread.Start();
+        }
 
         private void loadAlarmTable_Click(object sender, RoutedEventArgs e)
         {
             try
             {
-                var item = treeView.SelectedItem as TreeViewItem;
+                loadAlarmTableMethod();
 
-                string ipAdress = item.Header.ToString();
-                Task task = new Task(() => { tableBrowserNext(ipAdress, 161, "public", "1.3.6.1.4.1.4987.1.11.4.1", 6, tableBrowserAlarm); });
-                task.Start();
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                Dispatcher.BeginInvoke(DispatcherPriority.Normal, new Action(() =>
+                {
+                    AppendTextToOutput("table browser : " + ex.Message);
+                }));
 
                 pleaseSelectEz pl = new pleaseSelectEz();
                 pl.Show();
             }
         }
 
-
+        private Thread xcTableThread , systemAlarmThread;
         private void tabControl_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            
-            if (XCtab.IsSelected ==true && xcAutoRefreshCheckBox.IsChecked ==true)
+
+            selectionChangedMethod();
+
+        }
+
+        private void selectionChangedMethod()
+        {
+            try
             {
-                try
+
+
+                if ((XCtab.IsSelected == true && xcAutoRefreshCheckBox.IsChecked == true))
                 {
-                    var item = treeView.SelectedItem as TreeViewItem;
-                    string ipAdress = item.Header.ToString();
-                    Task task = new Task(() => { tableBrowserNext(ipAdress, 161, "public", "1.3.6.1.4.1.4987.1.1.1", 16, tableBrowserGrid); });
-                    task.Start();
-
-
+                    loadXcTableMethod();
 
                 }
-                catch (Exception)
+                else if (systemAlarmTab.IsSelected == true && alarmAutoRefreshCheckBox.IsChecked == true)
                 {
-
-                    pleaseSelectEz pl = new pleaseSelectEz();
-                    pl.Show();
-                }
-            }
-            if (systemAlarmTab.IsSelected == true && alarmAutoRefreshCheckBox.IsChecked == true)
-            {
-                try
-                {
-                    var item = treeView.SelectedItem as TreeViewItem;
-
-                    string ipAdress = item.Header.ToString();
-                    Task task = new Task(() => { tableBrowserNext(ipAdress, 161, "public", "1.3.6.1.4.1.4987.1.11.4.1", 6, tableBrowserAlarm); });
-
-                    task.Start();
+                    loadAlarmTableMethod();
 
                 }
-                catch (Exception)
+                else
                 {
-
-                    pleaseSelectEz pl = new pleaseSelectEz();
-                    pl.Show();
+                    if (systemAlarmThread != null && systemAlarmThread.IsAlive) systemAlarmThread.Abort();
+                    if (xcTableThread != null && xcTableThread.IsAlive) xcTableThread.Abort();
                 }
+
+
 
             }
-
-
-
+            catch (System.NullReferenceException ne)
+            {
+                Dispatcher.BeginInvoke(DispatcherPriority.Normal, new Action(() =>
+                {
+                    AppendTextToOutput("table browser : " + ne.Message);
+                }));
+                return;
+            }
+            catch (Exception ex)
+            {
+                Dispatcher.BeginInvoke(DispatcherPriority.Normal, new Action(() =>
+                {
+                    AppendTextToOutput("table browser : " + ex.Message);
+                }));
+                pleaseSelectEz pl = new pleaseSelectEz();
+                pl.Show();
+            }
         }
 
         public void AlarmAutoRefreshCheckBox(string ipAdress)
@@ -1489,8 +1540,8 @@ namespace SimplerSNMP
             
                 try
                 {
-                    Task task = new Task(() => { tableBrowserNext(ipAdress, 161, "public", "1.3.6.1.4.1.4987.1.1.1", 16, tableBrowserGrid); });
-                    task.Start();
+                   // Task task = new Task(() => { tableBrowserNext(ipAdress, 161, "public", "1.3.6.1.4.1.4987.1.1.1", 16, tableBrowserGrid); });
+                   // task.Start();
                    
 
                 }
