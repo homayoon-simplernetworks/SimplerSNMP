@@ -27,6 +27,7 @@ using System.Net.Mail;
 using System.ComponentModel;
 using System.Collections;
 using System.Reflection;
+using System.Globalization;
 
 namespace SimplerSNMP
 {
@@ -270,7 +271,10 @@ namespace SimplerSNMP
         // to do: loges should be added  to a text file 
         public void AppendTextToOutput(string text)
         {
-            LogBox.Text = LogBox.Text + DateTime.Now.ToString() + ", " + text + "\r\n";
+            string timestamp = DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss.fff",
+                                            CultureInfo.InvariantCulture);
+            LogBox.Text = LogBox.Text + timestamp + ", " + text + "\r\n";
+            
             LogBox.ScrollToEnd();
         }
 
@@ -876,7 +880,10 @@ namespace SimplerSNMP
         //Trap 
         public void AppendTextToTrapLogger(string text)
         {
-            trapLoggerTextBox.AppendText(DateTime.Now.ToString() + ",   " + text + "\r\n");
+            string timestamp = DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss.fff",
+                                           CultureInfo.InvariantCulture);
+
+            trapLoggerTextBox.AppendText(timestamp + ",   " + text + "\r\n");
             trapLoggerTextBox.ScrollToEnd();
         }
         public void TrapRe()
@@ -932,10 +939,10 @@ namespace SimplerSNMP
                         // Parse SNMP Version 2 TRAP packet 
                         SnmpV2Packet pkt = new SnmpV2Packet();
                         pkt.decode(indata, inlen);
+                        string pinfo;
 
 
-
-
+                        pinfo = "** SNMP Version 2 TRAP received from {0}:" + inep.ToString();
                         Dispatcher.BeginInvoke(DispatcherPriority.Normal, new Action(() =>
                         {
                             AppendTextToTrapLogger("** SNMP Version 2 TRAP received from {0}:" + inep.ToString());
@@ -947,36 +954,24 @@ namespace SimplerSNMP
                         }
                         else
                         {
-                            Dispatcher.BeginInvoke(DispatcherPriority.Normal, new Action(() =>
-                            {
-                                AppendTextToTrapLogger("*** Community: {0}" + pkt.Community.ToString());
-
-                            }));
-
-                            Dispatcher.BeginInvoke(DispatcherPriority.Normal, new Action(() =>
-                            {
-                                AppendTextToTrapLogger("*** VarBind count: {0}" + pkt.Pdu.VbList.Count);
-
-                            }));
-
-                            Dispatcher.BeginInvoke(DispatcherPriority.Normal, new Action(() =>
-                            {
-                                AppendTextToTrapLogger("*** VarBind content:");
-
-                            }));
+                           
+                            pinfo += "\n " + "              *** Community: " + pkt.Community.ToString();
+                            pinfo += "\n " + "              *** VarBind count: " + pkt.Pdu.VbList.Count;
+                            pinfo += "\n " + "              *** VarBind content:";
+                            
 
                             foreach (Vb v in pkt.Pdu.VbList)
                             {
-                                Dispatcher.BeginInvoke(DispatcherPriority.Normal, new Action(() =>
-                                {
-                                    AppendTextToTrapLogger("**** {0} {1}: {2}" +
-                                   v.Oid.ToString() + SnmpConstants.GetTypeName(v.Value.Type) + v.Value.ToString());
+                                pinfo += "\n " + "                          " + v.Oid.ToString() + "  "+ SnmpConstants.GetTypeName(v.Value.Type)+ " : " + v.Value.ToString();
 
-                                }));
+                              
                             }
+
+                            pinfo += "\n " + " * *End of SNMP Version 2 TRAP data.  \n   \n";
+
                             Dispatcher.BeginInvoke(DispatcherPriority.Normal, new Action(() =>
                             {
-                                AppendTextToTrapLogger("** End of SNMP Version 2 TRAP data.");
+                                AppendTextToTrapLogger(pinfo);
                             }));
                         }
                     }
@@ -1096,7 +1091,9 @@ namespace SimplerSNMP
         {
             if (text.Contains(syslogFilterTextbox.Text))
             {
-                syslogLoggerTextBox.AppendText(DateTime.Now.ToString() + ",   " + text + "\r\n");
+                string timestamp = DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss.fff",
+                                            CultureInfo.InvariantCulture);
+                syslogLoggerTextBox.AppendText(timestamp + ",   " + text + "\r\n");
                 syslogLoggerTextBox.ScrollToEnd();
             }
         }
@@ -1192,10 +1189,10 @@ namespace SimplerSNMP
 
         //to load table columns and OIds from XML file
 
-        public void tableBrowserNext(string tHost, int tPort, string tCommunity, string tOID, int columnNumber, DataGrid dg )
+        public async void tableBrowserNext(string tHost, int tPort, string tCommunity, string tOID, int columnNumber, DataGrid dg )
         {
             //clean table 
-            Dispatcher.BeginInvoke(DispatcherPriority.Normal, new Action(() =>
+            await Dispatcher.BeginInvoke(DispatcherPriority.Normal, new Action(() =>
             {
                 dg.ItemsSource = null;  
             }
@@ -1285,12 +1282,10 @@ namespace SimplerSNMP
                 }
                 catch (Exception e)
                 {
-                    
-
-                    Dispatcher.BeginInvoke(DispatcherPriority.Normal, new Action(() =>
-                    {
-                        AppendTextToOutput("table browser ((in)) : (" + tHost + ") " + e.Message);
-                    }));
+                    await Dispatcher.BeginInvoke(DispatcherPriority.Normal, new Action(() =>
+                          {
+                              AppendTextToOutput("table browser ((in)) : (" + tHost + ") " + e.Message);
+                          }));
                     lastOid = null;
                     return;
                 }
@@ -1306,13 +1301,14 @@ namespace SimplerSNMP
                     // the Agent - see SnmpConstants for error definitions
                     if (result.Pdu.ErrorStatus != 0)
                     {
-                        // agent reported an error with the request
+                        await
+                                                // agent reported an error with the request
 
 
-                        Dispatcher.BeginInvoke(DispatcherPriority.Normal, new Action(() =>
-                        {
-                            AppendTextToOutput("table browser : Error in SNMP reply.Error  (" + tHost + ") " + result.Pdu.ErrorStatus + " : " + result.Pdu.ErrorIndex);
-                        }));
+                                                Dispatcher.BeginInvoke(DispatcherPriority.Normal, new Action(() =>
+                                                {
+                                                    AppendTextToOutput("table browser : Error in SNMP reply.Error  (" + tHost + ") " + result.Pdu.ErrorStatus + " : " + result.Pdu.ErrorIndex);
+                                                }));
 
                         lastOid = null;
                         break;
@@ -1351,14 +1347,13 @@ namespace SimplerSNMP
                         if (lastOid != null)
                         {
                             dataTable.Rows.Add(columnList.ToArray());
+                            await Dispatcher.BeginInvoke(DispatcherPriority.Normal, new Action(() =>
+                                  {
+                                      dg.ItemsSource = null;
+                                      dg.ItemsSource = dataTable.DefaultView;
 
-                            Dispatcher.BeginInvoke(DispatcherPriority.Normal, new Action(() =>
-                            {
-                                dg.ItemsSource = null;
-                                dg.ItemsSource = dataTable.DefaultView;
-                                
 
-                            }));
+                                  }));
 
 
                         }
@@ -1367,18 +1362,18 @@ namespace SimplerSNMP
                 }
                 else
                 {
-                    Dispatcher.BeginInvoke(DispatcherPriority.Normal, new Action(() =>
-                    {
-                        AppendTextToOutput("table browser : No response received from SNMP agent. (" + tHost + ") ");
-                    }));
+                    await Dispatcher.BeginInvoke(DispatcherPriority.Normal, new Action(() =>
+                     {
+                         AppendTextToOutput("table browser : No response received from SNMP agent. (" + tHost + ") ");
+                     }));
                 }
 
             }
 
-            Dispatcher.BeginInvoke(DispatcherPriority.Normal, new Action(() =>
-            {
-                AppendTextToOutput("we have reached the end of the XC requested MIB tree. ");
-            }));
+            await Dispatcher.BeginInvoke(DispatcherPriority.Normal, new Action(() =>
+                  {
+                      AppendTextToOutput("we have reached the end of the XC requested MIB tree. ");
+                  }));
 
             //
 
@@ -1466,7 +1461,7 @@ namespace SimplerSNMP
 
         }
 
-        private void selectionChangedMethod()
+        private async void selectionChangedMethod()
         {
             try
             {
@@ -1475,17 +1470,36 @@ namespace SimplerSNMP
                 if ((XCtab.IsSelected == true && xcAutoRefreshCheckBox.IsChecked == true))
                 {
                     loadXcTableMethod();
+                    
 
                 }
-                else if (systemAlarmTab.IsSelected == true && alarmAutoRefreshCheckBox.IsChecked == true)
+                else
+                {
+
+                    if (xcTableThread != null && xcTableThread.IsAlive) xcTableThread.Abort();
+                    await Dispatcher.BeginInvoke(DispatcherPriority.Normal, new Action(() =>
+                    {
+                        tableBrowserGrid.ItemsSource = null;
+
+                    }));
+                }
+
+                if (systemAlarmTab.IsSelected == true && alarmAutoRefreshCheckBox.IsChecked == true)
                 {
                     loadAlarmTableMethod();
 
                 }
                 else
                 {
-                    if (systemAlarmThread != null && systemAlarmThread.IsAlive) systemAlarmThread.Abort();
-                    if (xcTableThread != null && xcTableThread.IsAlive) xcTableThread.Abort();
+                    if (systemAlarmThread != null && systemAlarmThread.IsAlive)  systemAlarmThread.Abort();
+                    await Dispatcher.BeginInvoke(DispatcherPriority.Normal, new Action(() =>
+                    {
+                        tableBrowserAlarm.ItemsSource = null;
+                        
+
+
+                    }));
+
                 }
 
 
