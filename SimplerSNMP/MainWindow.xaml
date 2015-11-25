@@ -74,7 +74,7 @@
                     </Grid.ColumnDefinitions>
                     <DataGrid x:Name="tableBrowserGrid" Margin="0,26,9,10"/>
                     <Button x:Name="loadCrossTable" Content="load Cross Table" HorizontalAlignment="Left" Margin="0,1,0,0" VerticalAlignment="Top" Width="115" Click="loadCrossTable_Click" Height="20"/>
-                    <CheckBox x:Name="xcAutoRefreshCheckBox" Content="Auto Refresh" HorizontalAlignment="Left" Margin="143,3,0,0" VerticalAlignment="Top" RenderTransformOrigin="0.366,-0.267" IsChecked="True"/>
+                    <CheckBox x:Name="xcAutoRefreshCheckBox" Content="Auto Refresh" HorizontalAlignment="Left" Margin="143,3,0,0" VerticalAlignment="Top" RenderTransformOrigin="0.366,-0.267" IsEnabled="False"/>
                 </Grid>
             </TabItem>
             <TabItem x:Name="systemAlarmTab" Header="System Alarms" HorizontalAlignment="Left" Height="24" VerticalAlignment="Top" Width="102" Margin="-10,0,-5,0">
@@ -85,7 +85,7 @@
                     </Grid.ColumnDefinitions>
                     <Button x:Name="loadAlarmTable" Content="load Alarm Table" HorizontalAlignment="Left" Margin="0,1,0,0" VerticalAlignment="Top" Width="115" Click="loadAlarmTable_Click" Height="20"/>
                     <DataGrid x:Name="tableBrowserAlarm" Margin="0,26,10,10"/>
-                    <CheckBox x:Name="alarmAutoRefreshCheckBox" Content="Auto Refresh" HorizontalAlignment="Left" Margin="143,3,0,0" VerticalAlignment="Top" RenderTransformOrigin="0.366,-0.267" IsChecked="True"/>
+                    <CheckBox x:Name="alarmAutoRefreshCheckBox" Content="Auto Refresh" HorizontalAlignment="Left" Margin="143,3,0,0" VerticalAlignment="Top" RenderTransformOrigin="0.366,-0.267" IsEnabled="False"/>
                 </Grid>
             </TabItem>
         </TabControl>

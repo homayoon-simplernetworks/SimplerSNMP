@@ -5,14 +5,23 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:SimplerSNMP"
         mc:Ignorable="d"
-        Title="AddSystem" Height="300" Width="300">
+        Title="AddSystem" Height="300" Width="305.44">
     <Grid>
         <Button x:Name="button" Content="ADD and Close" HorizontalAlignment="Left" Margin="104,227,0,0" VerticalAlignment="Top" Width="117" Click="button_Click"/>
-        <TextBox x:Name="ipTextBox" HorizontalAlignment="Left" Height="23" Margin="122,50,0,0" TextWrapping="Wrap" Text="192.168.3.110" VerticalAlignment="Top" Width="120"/>
-        <TextBox x:Name="portTestbox" HorizontalAlignment="Left" Height="23" Margin="122,78,0,0" TextWrapping="Wrap" Text="161" VerticalAlignment="Top" Width="120"/>
-        <TextBox x:Name="desTextbox" HorizontalAlignment="Left" Height="23" Margin="122,106,0,0" TextWrapping="Wrap" Text="dessss" VerticalAlignment="Top" Width="120"/>
-        <TextBox x:Name="rcTextbox" HorizontalAlignment="Left" Height="23" Margin="122,134,0,0" TextWrapping="Wrap" Text="public" VerticalAlignment="Top" Width="120"/>
-        <TextBox x:Name="wcTextbox" HorizontalAlignment="Left" Height="23" Margin="122,162,0,0" TextWrapping="Wrap" Text="AdminPublic" VerticalAlignment="Top" Width="120"/>
+        <TextBox x:Name="ipTextBox" HorizontalAlignment="Left" Height="23" Margin="104,50,0,0" TextWrapping="Wrap" Text="192.168.3.110" VerticalAlignment="Top" Width="165" LostFocus="TextBox_LostFocus"/>
+        <TextBox x:Name="portTestbox" HorizontalAlignment="Left" Height="23" Margin="104,77,0,0" TextWrapping="Wrap" Text="161" VerticalAlignment="Top" Width="165" LostFocus="TextBox_LostFocus"/>
+        <TextBox x:Name="desTextbox" HorizontalAlignment="Left" Height="23" Margin="104,106,0,0" TextWrapping="Wrap" Text="Description" VerticalAlignment="Top" Width="165" LostFocus="TextBox_LostFocus"/>
+        <TextBox x:Name="rcTextbox" HorizontalAlignment="Left" Height="23" Margin="104,134,0,0" TextWrapping="Wrap" Text="public" VerticalAlignment="Top" Width="165" LostFocus="TextBox_LostFocus"/>
+        <TextBox x:Name="wcTextbox" HorizontalAlignment="Left" Height="23" Margin="104,163,0,0" TextWrapping="Wrap" Text="AdminPublic" VerticalAlignment="Top" Width="165" LostFocus="TextBox_LostFocus"/>
+        <TextBox x:Name="mibFileTextBox" HorizontalAlignment="Left" Height="23" Margin="104,190,0,0" VerticalAlignment="Top" Width="165" MaxLines="1" FontStretch="Condensed" ToolTip="mib file should be in xml format, use this command(linux): smidump -k -f xml  SIMPLER-NETWORKS-MIB_b279.my &gt; simplerMib_b279.xml 2&gt;null" LostFocus="TextBox_LostFocus"/>
+        <Button x:Name="fileBrowser" Content="&gt;&gt;" HorizontalAlignment="Left" Margin="270,190,0,0" VerticalAlignment="Top" Width="18" Height="23" Click="fileBrowser_Click" ToolTip="mib file should be in xml format, use this command(linux): smidump -k -f xml  SIMPLER-NETWORKS-MIB_b279.my &gt; simplerMib_b279.xml 2&gt;null"/>
+        <Label x:Name="iPaddress" Content="IP Address:" HorizontalAlignment="Right" Margin="0,47,188,0" VerticalAlignment="Top"/>
+        <Label x:Name="iPaddress_Copy" Content="Port:" HorizontalAlignment="Right" Margin="0,75,188,0" VerticalAlignment="Top" RenderTransformOrigin="1.022,0.544"/>
+        <Label x:Name="iPaddress_Copy1" Content="Description:" HorizontalAlignment="Right" Margin="0,103,188,0" VerticalAlignment="Top"/>
+        <Label x:Name="iPaddress_Copy2" Content="Read Community:" HorizontalAlignment="Right" Margin="0,132,188,0" VerticalAlignment="Top"/>
+        <Label x:Name="iPaddress_Copy3" Content="Write Community:" HorizontalAlignment="Right" Margin="-2,157,188,0" VerticalAlignment="Top"/>
+        <Label x:Name="iPaddress_Copy4" Content="mib.xml:" HorizontalAlignment="Right" Margin="0,187,188,0" VerticalAlignment="Top" ToolTip="mib file should be in xml format, use this command(linux): smidump -k -f xml  SIMPLER-NETWORKS-MIB_b279.my &gt; simplerMib_b279.xml 2&gt;null"/>
+        <Label x:Name="iPaddress_Copy5" Content="New EZ-EDGE system" HorizontalAlignment="Right" Margin="0,12,87,0" VerticalAlignment="Top" FontSize="13.333" FontWeight="Bold"/>
 
     </Grid>
 </Window>

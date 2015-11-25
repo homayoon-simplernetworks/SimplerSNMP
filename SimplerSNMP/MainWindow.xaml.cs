@@ -62,8 +62,9 @@ namespace SimplerSNMP
         public int Sub_Ports { get; set; }
         public int OE_Ports { get; set; }
         public int Bundle_Size { get; set; }
+        public string mibAddress { get; set; }
 
-        
+
     }
     public class ezSystemProvider
     {
@@ -260,9 +261,29 @@ namespace SimplerSNMP
             t2.IsBackground = true;
             t2.Start();
 
+            /*
+
+            Task task11 = new Task(() => { alarmAutoRefreshMethod(); });
+            task11.Start();
+            Task task12 = new Task(() => { xcAutoRefreshMethod(); });
+            task12.Start();
+
+
+
+            //xcAutoRefreshMethod();
+
+
+            /* Thread t3 = new Thread(new ThreadStart(alarmAutoRefreshMethod));
+             t3.IsBackground = true;
+             t3.Start();
+
+             Thread t4 = new Thread(new ThreadStart(xcAutoRefreshMethod));
+             t4.IsBackground = true;
+             t4.Start(); */
+
             sniTableId();
 
-            //syslogLogger();
+            
 
 
         }
@@ -271,13 +292,19 @@ namespace SimplerSNMP
         // to do: loges should be added  to a text file 
         public void AppendTextToOutput(string text)
         {
-            string timestamp = DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss.fff",
+            string timestamp = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff",
                                             CultureInfo.InvariantCulture);
             LogBox.Text = LogBox.Text + timestamp + ", " + text + "\r\n";
             
             LogBox.ScrollToEnd();
         }
 
+        public string oidProvider(string tableName)
+        {
+
+
+            return "";
+        }
 
 
         #region tree-view
@@ -285,15 +312,16 @@ namespace SimplerSNMP
 
         public bool IsSelected { get; set; }
 
+
+        private List<ezEdgeSystems> ezSystemList = new List<ezEdgeSystems>();
         private void treeviewLoader(TreeView tv, string fn)
         {
             DataTable dt = new DataTable();
             DataSet ds = new DataSet();
 
-            ezEdgeSystems eze = new ezEdgeSystems();
+            
 
-            Type type = eze.GetType();
-            PropertyInfo[] properties = type.GetProperties();
+
 
             try
             {
@@ -309,12 +337,22 @@ namespace SimplerSNMP
 
                 foreach (DataRow dr in dt.Rows)
                 {
-                    TreeViewItem treeItem = null;
+                    TreeViewItem treeItem = null;                    
                     treeItem = new TreeViewItem();
-                    treeItem.Header = dr[0];
+                    ezEdgeSystems eze = new ezEdgeSystems();
+
+
+                    treeItem.Header = dr["Host"];
+                    eze.Host = dr["Host"].ToString();
+                    eze.Port = Int16.Parse( dr["Port"].ToString());                 ;
+                    eze.Write_Community = dr["Write_Community"].ToString();
+                    eze.Read_Community = dr["Read_Community"].ToString();
+                    eze.mibAddress = dr["mibAddress"].ToString();
+
+
                     treeItem.IsSelected = true;
                     tv.Items.Add(treeItem);
-
+                    ezSystemList.Add(eze);
 
                 }
 
@@ -323,11 +361,16 @@ namespace SimplerSNMP
                 tvi.IsSelected = true;
 
             }
-            catch (IOException)
+            catch (IOException )
             {
                 AddSystem ad = new AddSystem();
                 ad.Show();
 
+            }
+            catch (IndexOutOfRangeException)
+            {
+                AddSystem ad = new AddSystem();
+                ad.Show();
             }
         }
 
@@ -364,7 +407,11 @@ namespace SimplerSNMP
             string rHost = item.Header.ToString();
             ezp.removeSystems(rHost, "ez_systems.xml");
             treeviewLoader(treeView, "ez_systems.xml");
-            addRemoveTrapdestination(rHost, 161, GetLocalIPAddress(), "public", "AdminPublic", 6);
+            Task trapTableRemove = new Task(new Action(() => { addRemoveTrapdestination(rHost, 161, GetLocalIPAddress(), "public", "AdminPublic", 6); }));
+
+            
+            trapTableRemove.Start();
+            
         }
 
         private void treeView_SelectedItemChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
@@ -377,7 +424,7 @@ namespace SimplerSNMP
                 // ... Handle a TreeViewItem.
                 var item = tree.SelectedItem as TreeViewItem;
                 this.Title = "Selected System: " + item.Header.ToString();
-                selectionChangedMethod();
+                //selectionChangedMethod();
             }
             else if (tree.SelectedItem is string)
             {
@@ -417,7 +464,7 @@ namespace SimplerSNMP
                 connectionTable = value;
             }
         }
-        public string crossConnection(string ipAdd, int sPort, string originCard, string originPort, string destCard, string destPort)
+        public string crossConnection(string ipAdd, int sPort, string originCard, string originPort, string destCard, string destPort , string serviceID, string cirutId , string tableOid, string WriteComminuty)
         {
             // Prepare target
             UdpTarget target = new UdpTarget((IPAddress)new IpAddress(ipAdd), sPort, 15000, 0);
@@ -439,15 +486,15 @@ namespace SimplerSNMP
             }));
 
 
-            pdu.VbList.Add(new Oid(ConnectionTable + "16." + crossJumper + "4"), new Integer32(4));
+            pdu.VbList.Add(new Oid(tableOid + "16." + crossJumper + serviceID), new Integer32(4));
             // Set a value to integer
-            pdu.VbList.Add(new Oid(ConnectionTable + "6." + crossJumper + "4"), new Integer32(0));
+            pdu.VbList.Add(new Oid(tableOid + "6." + crossJumper + serviceID), new Integer32(0));
             // Set a value to unsigned integer
-            pdu.VbList.Add(new Oid(ConnectionTable + "7." + crossJumper + "4"), new Integer32(0));
-            pdu.VbList.Add(new Oid(ConnectionTable + "12." + crossJumper + "4"), new OctetString("0"));
+            pdu.VbList.Add(new Oid(tableOid + "7." + crossJumper + serviceID), new Integer32(0));
+            pdu.VbList.Add(new Oid(tableOid + "12." + crossJumper + serviceID), new OctetString(cirutId));
 
             // Set Agent security parameters
-            AgentParameters aparam = new AgentParameters(SnmpVersion.Ver2, new OctetString("AdminPublic"));
+            AgentParameters aparam = new AgentParameters(SnmpVersion.Ver2, new OctetString(WriteComminuty));
 
             // Response packet
             SnmpV2Packet response;
@@ -585,21 +632,19 @@ namespace SimplerSNMP
             }
         }
 
-        private void createCrossConnection(string ipAdress, int sPort, string originCard, string originPort, string destCard, string destPort, string crossNumber)
-        { /*
-            string originCard = fromCard.Text;
-            string originPort = fromPort.Text;
-            string destCard = toCard.Text;
-            string destPort = toPort.Text;
-            */
-
+        private void createCrossConnection(ezEdgeSystems ez, string originCard, string originPort, string destCard, string destPort, string crossNumber)
+        { 
 
             string result;
+            string serviceID = "2";
+            string cirutId = "test";
+
+
             for (int i = 0; i < Int16.Parse(crossNumber); i++)
 
             {
 
-                result = crossConnection(ipAdress, sPort, originCard, originPort, destCard, destPort);
+                result = crossConnection(ez.Host, ez.Port , originCard, originPort, destCard, destPort , serviceID, cirutId,  ConnectionTable, ez.Write_Community);
                 originPort = (Int16.Parse(originPort) + 1).ToString();
                 destPort = (Int16.Parse(destPort) + 1).ToString();
 
@@ -628,6 +673,22 @@ namespace SimplerSNMP
             }
         }
 
+        private ezEdgeSystems currentEzEdgeSystem()
+        {
+            var item = treeView.SelectedItem as TreeViewItem;
+            string ipAddress = item.Header.ToString();
+
+            foreach (ezEdgeSystems ez in ezSystemList)
+            {
+                if (ez.Host == ipAddress)
+                {
+                    return ez;
+                }
+            }
+            return ezSystemList[0];
+
+        }
+
         private void createCross_Click(object sender, RoutedEventArgs e)
         {
             try
@@ -639,12 +700,12 @@ namespace SimplerSNMP
                 string scrossNumber = crossNumber.Text;
 
                 //string ipAdress = "192.168.3.115";
-                var item = treeView.SelectedItem as TreeViewItem;
 
-                string ipAdress = item.Header.ToString();
-                int sPort = 161;
+                ezEdgeSystems ez;
+                ez = currentEzEdgeSystem();
 
-                Task task = new Task(() => { createCrossConnection(ipAdress, sPort, originCard, originPort, destCard, destPort, scrossNumber); });
+
+                Task task = new Task(() => { createCrossConnection(ez, originCard, originPort, destCard, destPort, scrossNumber); });
                 task.Start();
             }
             catch (Exception)
@@ -880,7 +941,7 @@ namespace SimplerSNMP
         //Trap 
         public void AppendTextToTrapLogger(string text)
         {
-            string timestamp = DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss.fff",
+            string timestamp = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff",
                                            CultureInfo.InvariantCulture);
 
             trapLoggerTextBox.AppendText(timestamp + ",   " + text + "\r\n");
@@ -1091,7 +1152,7 @@ namespace SimplerSNMP
         {
             if (text.Contains(syslogFilterTextbox.Text))
             {
-                string timestamp = DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss.fff",
+                string timestamp = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff",
                                             CultureInfo.InvariantCulture);
                 syslogLoggerTextBox.AppendText(timestamp + ",   " + text + "\r\n");
                 syslogLoggerTextBox.ScrollToEnd();
@@ -1102,8 +1163,14 @@ namespace SimplerSNMP
         {
             IPEndPoint anyIP = new IPEndPoint(IPAddress.Any, 0);
             UdpClient udpListener = new UdpClient(514);
+
+            int loggerBuffer = 0;
             string tobelog;
+
+            Tuple<string, string> tobelogTuple = new Tuple<string, string>("","");
+            List <Tuple<string, string>> syslogList = new List<Tuple<string, string>>();
             byte[] bReceive; string sReceive; string sourceIP;
+            
 
             /* Main Loop */
             /* Listen for incoming data on udp port 514 (default for SysLog events) */
@@ -1116,13 +1183,15 @@ namespace SimplerSNMP
                     sReceive = Encoding.ASCII.GetString(bReceive);
                     /* Get the IP of the device sending the syslog */
                     sourceIP = anyIP.Address.ToString();
+                    
                     new Thread(new logHandler(sourceIP, sReceive).handleLog).Start();
+                                       
 
                     tobelog = sReceive.Replace(Environment.NewLine, "").Trim(); /* Syslog data */
 
                     Dispatcher.BeginInvoke(DispatcherPriority.Normal, new Action(() =>
                     {
-                        AppendTextTosyslogLogger(tobelog);
+                        AppendTextTosyslogLogger(sourceIP + "  -->  " +tobelog);
                     }));
 
 
@@ -1133,7 +1202,7 @@ namespace SimplerSNMP
                 {
                     Dispatcher.BeginInvoke(DispatcherPriority.Normal, new Action(() =>
                     {
-                        AppendTextTosyslogLogger(ex.ToString());
+                        AppendTextToOutput("syslog exception: " + ex.ToString());
                     }));
 
                 }
@@ -1191,10 +1260,14 @@ namespace SimplerSNMP
 
         public async void tableBrowserNext(string tHost, int tPort, string tCommunity, string tOID, int columnNumber, DataGrid dg )
         {
+            //check if still selected system is same as tHost
+            string selectedHost = "";
+
             //clean table 
             await Dispatcher.BeginInvoke(DispatcherPriority.Normal, new Action(() =>
             {
-                dg.ItemsSource = null;  
+                dg.ItemsSource = null;
+                dg.IsEnabled = false;
             }
             ));
             // SNMP community name
@@ -1254,133 +1327,166 @@ namespace SimplerSNMP
                 AppendTextToOutput("Start getting XC table for :  " + tHost);
             }));
 
-            // Loop through results
-            while (lastOid != null)
+            try
             {
-                // When Pdu class is first constructed, RequestId is set to a random value
-                // that needs to be incremented on subsequent requests made using the
-                // same instance of the Pdu class.
-                if (pdu.RequestId != 0)
+                // Loop through results
+                while (lastOid != null)
                 {
-                    pdu.RequestId += 1;
-                }
-                // Clear Oids from the Pdu class.
-                pdu.VbList.Clear();
-                // Initialize request PDU with the last retrieved Oid
-
-
-                pdu.VbList.Add(lastOidList);
-
-                // Make SNMP request
-                SnmpV1Packet result = null;
-
-                try
-                {
-                    
-                    result = (SnmpV1Packet)target.Request(pdu, param);
-                    
-                }
-                catch (Exception e)
-                {
-                    await Dispatcher.BeginInvoke(DispatcherPriority.Normal, new Action(() =>
-                          {
-                              AppendTextToOutput("table browser ((in)) : (" + tHost + ") " + e.Message);
-                          }));
-                    lastOid = null;
-                    return;
-                }
-
-
-                // If result is null then agent didn't reply or we couldn't parse the reply.
-                if (result != null)
-                {
-
-
-                    
-                    // ErrorStatus other then 0 is an error returned by 
-                    // the Agent - see SnmpConstants for error definitions
-                    if (result.Pdu.ErrorStatus != 0)
+                    // When Pdu class is first constructed, RequestId is set to a random value
+                    // that needs to be incremented on subsequent requests made using the
+                    // same instance of the Pdu class.
+                    if (pdu.RequestId != 0)
                     {
-                        await
-                                                // agent reported an error with the request
+                        pdu.RequestId += 1;
+                    }
+                    // Clear Oids from the Pdu class.
+                    pdu.VbList.Clear();
+                    // Initialize request PDU with the last retrieved Oid
 
 
-                                                Dispatcher.BeginInvoke(DispatcherPriority.Normal, new Action(() =>
-                                                {
-                                                    AppendTextToOutput("table browser : Error in SNMP reply.Error  (" + tHost + ") " + result.Pdu.ErrorStatus + " : " + result.Pdu.ErrorIndex);
-                                                }));
+                    pdu.VbList.Add(lastOidList);
 
-                        lastOid = null;
-                        break;
+                    // Make SNMP request
+                    SnmpV1Packet result = null;
+
+                   
+
+                        result = (SnmpV1Packet)target.Request(pdu, param);
+
+                   
+                   
+
+
+                    // If result is null then agent didn't reply or we couldn't parse the reply.
+                    if (result != null)
+                    {
+
+
+
+                        // ErrorStatus other then 0 is an error returned by 
+                        // the Agent - see SnmpConstants for error definitions
+                        if (result.Pdu.ErrorStatus != 0)
+                        {
+                            await
+                                                    // agent reported an error with the request
+
+
+                                                    Dispatcher.BeginInvoke(DispatcherPriority.Normal, new Action(() =>
+                                                    {
+                                                        AppendTextToOutput("table browser : Error in SNMP reply.Error  (" + tHost + ") " + result.Pdu.ErrorStatus + " : " + result.Pdu.ErrorIndex);
+                                                    }));
+
+                            lastOid = null;
+                            break;
+                        }
+                        else
+                        {
+                            // Walk through returned variable bindings
+                            lastOidList.Clear();
+                            columnList.Clear();
+                            foreach (Vb v in result.Pdu.VbList)
+                            {
+                                // Check that retrieved Oid is "child" of the root OID
+                                if (rootOid.IsRootOf(v.Oid))
+                                {
+
+
+
+
+
+                                    columnList.Add(v.Value.ToString());
+                                    lastOid = v.Oid;
+                                    lastOidList.Add(lastOid);
+                                }
+                                else
+                                {
+                                    // we have reached the end of the requested
+                                    // MIB tree. Set lastOid to null and exit loop
+
+
+
+                                    lastOid = null;
+                                }
+
+                            }
+
+                            if (lastOid != null)
+                            {
+                                dataTable.Rows.Add(columnList.ToArray());
+                                await Dispatcher.BeginInvoke(DispatcherPriority.Normal, new Action(() =>
+                                {
+                                    var item = treeView.SelectedItem as TreeViewItem;
+                                    selectedHost = item.Header.ToString();
+
+
+                                }));
+                                if (selectedHost == tHost)
+                                {
+                                    await Dispatcher.BeginInvoke(DispatcherPriority.Normal, new Action(() =>
+                                    {
+                                        dg.ItemsSource = null;
+                                        dg.ItemsSource = dataTable.DefaultView;
+
+                                    }));
+                                    
+
+                                }
+                                else
+                                {
+                                    break;
+                                }
+
+
+
+
+
+                            }
+
+                        }
                     }
                     else
                     {
-                        // Walk through returned variable bindings
-                        lastOidList.Clear();
-                        columnList.Clear();
-                        foreach (Vb v in result.Pdu.VbList)
-                        {
-                            // Check that retrieved Oid is "child" of the root OID
-                            if (rootOid.IsRootOf(v.Oid))
-                            {
-
-
-
-
-
-                                columnList.Add(v.Value.ToString());
-                                lastOid = v.Oid;
-                                lastOidList.Add(lastOid);
-                            }
-                            else
-                            {
-                                // we have reached the end of the requested
-                                // MIB tree. Set lastOid to null and exit loop
-
-                               
-
-                                lastOid = null;
-                            }
-
-                        }
-
-                        if (lastOid != null)
-                        {
-                            dataTable.Rows.Add(columnList.ToArray());
-                            await Dispatcher.BeginInvoke(DispatcherPriority.Normal, new Action(() =>
-                                  {
-                                      dg.ItemsSource = null;
-                                      dg.ItemsSource = dataTable.DefaultView;
-
-
-                                  }));
-
-
-                        }
-
+                        await Dispatcher.BeginInvoke(DispatcherPriority.Normal, new Action(() =>
+                         {
+                             AppendTextToOutput("table browser : No response received from SNMP agent. (" + tHost + ") ");
+                         }));
                     }
-                }
-                else
-                {
-                    await Dispatcher.BeginInvoke(DispatcherPriority.Normal, new Action(() =>
-                     {
-                         AppendTextToOutput("table browser : No response received from SNMP agent. (" + tHost + ") ");
-                     }));
+
                 }
 
+                 Dispatcher.BeginInvoke(DispatcherPriority.Normal, new Action(() =>
+                      {
+                          AppendTextToOutput("we have reached the end of the XC requested MIB tree. ");
+                      }));
+                 Dispatcher.BeginInvoke(DispatcherPriority.Normal, new Action(() =>
+                {
+                    dg.IsEnabled = true;
+                    
+
+                }));
+
+
+                //
+
+
+
+                target.Close();
+            }
+            catch (Exception e)
+            {
+                await Dispatcher.BeginInvoke(DispatcherPriority.Normal, new Action(() =>
+                {
+                    AppendTextToOutput("table browser ((in)) : (" + tHost + ") " + e.Message);
+                }));
+                lastOid = null;
+                return;
+            }
+            finally
+            {
+                target.Close();
+               // Thread.CurrentThread.Abort();
             }
 
-            await Dispatcher.BeginInvoke(DispatcherPriority.Normal, new Action(() =>
-                  {
-                      AppendTextToOutput("we have reached the end of the XC requested MIB tree. ");
-                  }));
-
-            //
-
-
-
-            target.Close();
-            
         }
 
         private void loadCrossTable_Click(object sender, RoutedEventArgs e)
@@ -1390,8 +1496,8 @@ namespace SimplerSNMP
                 var item = treeView.SelectedItem as TreeViewItem;
 
                 string ipAdress = item.Header.ToString();
-                //Task task = new Task(() => { tableBrowserNext(ipAdress, 161, "public", "1.3.6.1.4.1.4987.1.1.1", 16, tableBrowserGrid); });
-                //task.Start();
+                Task xcTask = new Task(() => { tableBrowserNext(ipAdress, 161, "public", "1.3.6.1.4.1.4987.1.1.1", 16, tableBrowserGrid); });
+                xcTask.Start();
             }
             catch (Exception)
             {
@@ -1417,8 +1523,16 @@ namespace SimplerSNMP
         {
             var item = treeView.SelectedItem as TreeViewItem;
             string ipAdress = item.Header.ToString();
-            if (xcTableThread != null && xcTableThread.IsAlive) xcTableThread.Abort();
+            if (xcTableThread != null )
+            {
+                //xcTableThread.Abort();
+                 Dispatcher.BeginInvoke(DispatcherPriority.Normal, new Action(() =>
+                {
+                    AppendTextToOutput("****Thread abort ");
+                }));
+            }
             xcTableThread = new Thread(new ThreadStart(() => { tableBrowserNext(ipAdress, 161, "public", "1.3.6.1.4.1.4987.1.1.1", 16, tableBrowserGrid); }));
+
             xcTableThread.IsBackground = true;
             xcTableThread.Start();
         }
@@ -1428,7 +1542,7 @@ namespace SimplerSNMP
             var item = treeView.SelectedItem as TreeViewItem;
 
             string ipAdress = item.Header.ToString();
-            if (systemAlarmThread != null && systemAlarmThread.IsAlive) systemAlarmThread.Abort();
+            //if (systemAlarmThread != null && systemAlarmThread.IsAlive) systemAlarmThread.Abort();
             systemAlarmThread = new Thread(new ThreadStart(() => { tableBrowserNext(ipAdress, 161, "public", "1.3.6.1.4.1.4987.1.11.4.1", 6, tableBrowserAlarm); }));
             systemAlarmThread.IsBackground = true;
             systemAlarmThread.Start();
@@ -1438,15 +1552,14 @@ namespace SimplerSNMP
         {
             try
             {
-                loadAlarmTableMethod();
+                var item = treeView.SelectedItem as TreeViewItem;
 
+                string ipAdress = item.Header.ToString();
+                Task alarmTask = new Task(() => { tableBrowserNext(ipAdress, 161, "public", "1.3.6.1.4.1.4987.1.11.4.1", 6, tableBrowserAlarm); });
+                alarmTask.Start();
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                Dispatcher.BeginInvoke(DispatcherPriority.Normal, new Action(() =>
-                {
-                    AppendTextToOutput("table browser : " + ex.Message);
-                }));
 
                 pleaseSelectEz pl = new pleaseSelectEz();
                 pl.Show();
@@ -1457,7 +1570,7 @@ namespace SimplerSNMP
         private void tabControl_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
 
-            selectionChangedMethod();
+            //selectionChangedMethod();
 
         }
 
@@ -1476,7 +1589,7 @@ namespace SimplerSNMP
                 else
                 {
 
-                    if (xcTableThread != null && xcTableThread.IsAlive) xcTableThread.Abort();
+                    //if (xcTableThread != null && xcTableThread.IsAlive) xcTableThread.Abort();
                     await Dispatcher.BeginInvoke(DispatcherPriority.Normal, new Action(() =>
                     {
                         tableBrowserGrid.ItemsSource = null;
@@ -1491,7 +1604,7 @@ namespace SimplerSNMP
                 }
                 else
                 {
-                    if (systemAlarmThread != null && systemAlarmThread.IsAlive)  systemAlarmThread.Abort();
+                    //if (systemAlarmThread != null && systemAlarmThread.IsAlive)  systemAlarmThread.Abort();
                     await Dispatcher.BeginInvoke(DispatcherPriority.Normal, new Action(() =>
                     {
                         tableBrowserAlarm.ItemsSource = null;
@@ -1524,46 +1637,92 @@ namespace SimplerSNMP
             }
         }
 
-        public void AlarmAutoRefreshCheckBox(string ipAdress)
+        public string getIpAddress()
         {
-            while (systemAlarmTab.IsSelected == true && alarmAutoRefreshCheckBox.IsChecked == true)
+            TreeViewItem item32;
+            string ipAdress;
+            item32 = treeView.SelectedItem as TreeViewItem;
+            ipAdress = item32.Header.ToString();
+            return ipAdress;
+        }
+       
+        public  void alarmAutoRefreshMethod()
+        {
+
+            
+
+            while ( alarmAutoRefreshCheckBox.IsChecked == true)
             {
                 try
                 {
-                   
+
+                    TreeViewItem item32;
+                    string ipAdress;
+                    item32 = treeView.SelectedItem as TreeViewItem;
+                    ipAdress = item32.Header.ToString();
+
+                    Task task = new Task(() => { tableBrowserNext(ipAdress, 161, "public", "1.3.6.1.4.1.4987.1.11.4.1", 6, tableBrowserAlarm); });
+                    task.Start();
+                    task.Wait();
+
                     var t = Task.Run(async delegate
                     {
                         await Task.Delay(5000);
                         
                     });
                     t.Wait();
+                    
 
                 }
                 catch (Exception ex)
                 {
+                    Dispatcher.BeginInvoke(DispatcherPriority.Normal, new Action(() =>
+                    {
+                        AppendTextToOutput(" AlarmAutoRefreshCheckBox : " + ex.Message);
+                    }));
 
-                    
                 }
 
             }
 
         }
 
-        public void XcAutoRefreshCheckBox(string ipAdress)
+        public void xcAutoRefreshMethod()
         {
-            
+
+
+            while (xcAutoRefreshCheckBox.IsChecked == true)
+            {
                 try
                 {
-                   // Task task = new Task(() => { tableBrowserNext(ipAdress, 161, "public", "1.3.6.1.4.1.4987.1.1.1", 16, tableBrowserGrid); });
-                   // task.Start();
-                   
+                    var item = treeView.SelectedItem as TreeViewItem;
+
+                    string ipAdress = item.Header.ToString();
+
+                    Task task = new Task(() => { tableBrowserNext(ipAdress, 161, "public", "1.3.6.1.4.1.4987.1.1.1", 16, tableBrowserGrid); });
+                    task.Start();
+                    task.Wait();
+
+                    var t = Task.Run(async delegate
+                    {
+                        await Task.Delay(5000);
+
+                    });
+                    t.Wait();
+
 
                 }
                 catch (Exception ex)
                 {
-
+                    Dispatcher.BeginInvoke(DispatcherPriority.Normal, new Action(() =>
+                    {
+                        AppendTextToOutput(" AlarmAutoRefreshCheckBox : " + ex.Message);
+                    }));
 
                 }
+
+            }
+            
 
             
 
@@ -1594,7 +1753,8 @@ namespace SimplerSNMP
     {
         /* Phrases within the syslog that will trigger an email notification */
         private string[] emailTriggers = new string[] { "link loss", "help please" };
-        private string outputPath = @"C:\logs\syslog\syslog.csv"; /* Location to store events */
+        string timestamp = DateTime.Now.ToString("yyyy-MM-dd",CultureInfo.InvariantCulture);
+        private string outputPath = @"C:\logs\syslog\"; /* Location to store events */
         private string source; private string log;
 
         public logHandler(string sourceIP, string logData) /* Initialize object and clean up the raw data */
@@ -1603,11 +1763,13 @@ namespace SimplerSNMP
             log = logData.Replace(Environment.NewLine, "").Trim(); /* Syslog data */
         }
 
+        
+
         public void handleLog() /* Store the syslog and determine whether to trigger an email notification */
         {
             /* Store the syslog using a new thread */
-            new Thread(new outputCsvRow(outputPath, new string[] { source, log }).addRow).Start();
-            for (int i = 0; i < emailTriggers.Count(); i++) { if (log.Contains(emailTriggers[i])) { emailEvent(); } }
+            new Thread(new outputCsvRow(outputPath+source +"_" + timestamp + "_syslog.csv", new string[] { source, log }).addRow).Start();
+            //for (int i = 0; i < emailTriggers.Count(); i++) { if (log.Contains(emailTriggers[i])) { emailEvent(); } }
             /* Search for trigger strings and send email if found */
 
             return;
@@ -1648,6 +1810,51 @@ namespace SimplerSNMP
             for (int i = 0; i < columns.Count(); i++) { formattedRow += "," + (char)34 + columns[i] + (char)34; }
         }
 
+       
+
+        public void addRow(List<Tuple<string, string>> syslogList)
+        {
+            int attempts = 0;
+            bool canAccess = false;
+            StreamWriter logWriter = null;
+
+
+
+            if (!File.Exists(outputPath)) /* If the file doesn't exist, give it some column headers */
+            {
+                logWriter = new StreamWriter(outputPath, true);
+                logWriter.WriteLine((char)34 + "Event_Time" + (char)34 + "," +
+                  (char)34 + "Device_IP" + (char)34 + "," + (char)34 + "SysLog" + (char)34);
+                logWriter.Close();
+            }
+            /* Thread safety first! This is a poor man's SpinLock */
+            while (true)
+            {
+                try
+                {
+                    logWriter = new StreamWriter(outputPath, true); /* Try to open the file for writing */
+                    canAccess = true; /* Success! */
+                    break;
+                }
+                catch (IOException ex)
+                {
+                    if (attempts < 15) { attempts++; Thread.Sleep(50); }
+                    else { Console.WriteLine(ex.ToString()); break; } /* Give up after 15 attempts */
+                }
+            }
+            if (canAccess) /* Write the line if the file is accessible */
+            {
+                logWriter.WriteLine(formattedRow);
+                logWriter.Close();
+                /* Dispatcher.BeginInvoke(DispatcherPriority.Normal, new Action(() =>
+                 {
+                     AppendTextTosyslogLogger(formattedRow);
+                 })); */
+
+            }
+            return;
+        }
+
         public void addRow()
         {
             int attempts = 0;
@@ -1674,7 +1881,12 @@ namespace SimplerSNMP
                 }
                 catch (IOException ex)
                 {
-                    if (attempts < 15) { attempts++; Thread.Sleep(50); }
+
+                    if (attempts < 15) {
+                        Random random = new Random();
+                        int randomNumber = random.Next(0, 200);
+                        attempts++;
+                        Thread.Sleep(randomNumber); }
                     else { Console.WriteLine(ex.ToString()); break; } /* Give up after 15 attempts */
                 }
             }
