@@ -28,6 +28,8 @@ using System.ComponentModel;
 using System.Collections;
 using System.Reflection;
 using System.Globalization;
+using Microsoft.Win32;
+using System.Data.OleDb;
 
 namespace SimplerSNMP
 {
@@ -475,6 +477,69 @@ namespace SimplerSNMP
         //cross connections
         private string connectionTable = "1.3.6.1.4.1.4987.1.1.1.";
 
+
+
+        private void fileBrowser_Click(object sender, RoutedEventArgs e)
+        {
+            // Create OpenFileDialog 
+            Microsoft.Win32.OpenFileDialog dlg = new Microsoft.Win32.OpenFileDialog();
+
+
+
+            // Set filter for file extension and default file extension 
+            dlg.DefaultExt = ".xlsx";
+            dlg.Filter = "XML Files (*.xlsx)|*.xlsx";
+
+
+            // Display OpenFileDialog by calling ShowDialog method 
+            Nullable<bool> result = dlg.ShowDialog();
+
+
+            // Get the selected file name and display in a TextBox 
+            if (result == true)
+            {
+                // Open document 
+                string filename = dlg.FileName;
+                xcFileTextBox.Text = filename;
+                
+
+            }
+        }
+
+        private void importXCButton_Click(object sender, RoutedEventArgs e)
+        {
+            loadXls(xcFileTextBox.Text);
+        }
+
+        public void loadXls(string filename)
+        {
+
+          try
+            {
+                ExcelDataService exSer = new ExcelDataService();
+
+                ObservableCollection<XcConnectionLine> xcConnectionLines = new ObservableCollection<XcConnectionLine>();
+                xcConnectionLines = exSer.loadExcel(filename);
+                ezEdgeSystems ez;
+                ez = currentEzEdgeSystem();
+
+
+                Task task = new Task(() => { createCrossConnection(xcConnectionLines, ez); });
+                task.Start();
+            }
+            catch (Exception ex)
+            {
+
+                Dispatcher.BeginInvoke(DispatcherPriority.Normal, new Action(() =>
+                {
+                    AppendTextToOutput("create jumper using excel file:  " + ex.Message);
+                }));
+
+            }
+
+
+        }
+
         public string ConnectionTable
         {
             get
@@ -487,7 +552,7 @@ namespace SimplerSNMP
                 connectionTable = value;
             }
         }
-        public string crossConnection(string ipAdd, int sPort, string originCard, string originPort, string destCard, string destPort , string serviceID, string cirutId , string tableOid, string WriteComminuty)
+        public string crossConnection(string ipAdd, int sPort, string originCard, string originPort, string destCard, string destPort , string serviceID, string cirutId , string tableOid, string WriteComminuty , int addDel)
         {
             // Prepare target
             UdpTarget target = new UdpTarget((IPAddress)new IpAddress(ipAdd), sPort, 15000, 0);
@@ -509,12 +574,17 @@ namespace SimplerSNMP
             }));
 
 
-            pdu.VbList.Add(new Oid(tableOid + "16." + crossJumper + serviceID), new Integer32(4));
-            // Set a value to integer
-            pdu.VbList.Add(new Oid(tableOid + "6." + crossJumper + serviceID), new Integer32(0));
-            // Set a value to unsigned integer
-            pdu.VbList.Add(new Oid(tableOid + "7." + crossJumper + serviceID), new Integer32(0));
-            pdu.VbList.Add(new Oid(tableOid + "12." + crossJumper + serviceID), new OctetString(cirutId));
+            pdu.VbList.Add(new Oid(tableOid + "16." + crossJumper + serviceID), new Integer32(addDel));
+
+            if (addDel == 4)
+            {
+                // Set a value to integer
+                pdu.VbList.Add(new Oid(tableOid + "6." + crossJumper + serviceID), new Integer32(0));
+                // Set a value to unsigned integer
+                pdu.VbList.Add(new Oid(tableOid + "7." + crossJumper + serviceID), new Integer32(0));
+                pdu.VbList.Add(new Oid(tableOid + "12." + crossJumper + serviceID), new OctetString(cirutId));
+            }
+            
 
             // Set Agent security parameters
             AgentParameters aparam = new AgentParameters(SnmpVersion.Ver2, new OctetString(WriteComminuty));
@@ -655,6 +725,33 @@ namespace SimplerSNMP
             }
         }
 
+
+        private void createCrossConnection(ObservableCollection<XcConnectionLine> xcConnectionLines , ezEdgeSystems ez)
+        {
+
+            string result;
+                     
+
+            foreach (XcConnectionLine xc in xcConnectionLines)
+            {
+                if (xc.command.ToLower().Equals("create"))
+                {
+                    result = crossConnection(ez.Host, ez.Port, xc.fromCard, xc.FromPort, xc.toCard, xc.toPort, xc.service, xc.circuitId, ConnectionTable, ez.Write_Community, 4);
+                }
+                else if (xc.command.ToLower().Equals("delete"))
+                {
+                    result = crossConnection(ez.Host, ez.Port, xc.fromCard, xc.FromPort, xc.toCard, xc.toPort, xc.service, xc.circuitId, ConnectionTable, ez.Write_Community, 6);
+                }
+                else if (xc.command.ToLower().Equals("update"))
+                {
+
+                }
+            }
+
+
+            
+        }
+
         private void createCrossConnection(ezEdgeSystems ez, string originCard, string originPort, string destCard, string destPort, string crossNumber)
         { 
 
@@ -667,7 +764,7 @@ namespace SimplerSNMP
 
             {
 
-                result = crossConnection(ez.Host, ez.Port , originCard, originPort, destCard, destPort , serviceID, cirutId,  ConnectionTable, ez.Write_Community);
+                result = crossConnection(ez.Host, ez.Port , originCard, originPort, destCard, destPort , serviceID, cirutId,  ConnectionTable, ez.Write_Community , 4);
                 originPort = (Int16.Parse(originPort) + 1).ToString();
                 destPort = (Int16.Parse(destPort) + 1).ToString();
 
@@ -1260,7 +1357,7 @@ namespace SimplerSNMP
                         else
                         {
                             tableAr =  line.Trim().Split(new Char[] { '=' });
-                            tableIdList.Add(tableAr[0],tableAr[1]);
+                            tableIdList.Add(tableAr[0].Trim(),tableAr[1].Trim());
 
                         }
 
@@ -1445,7 +1542,7 @@ namespace SimplerSNMP
                                         dg.ItemsSource = dataTable.DefaultView;
 
                                     }));
-                                    
+
 
                                 
 
@@ -1756,9 +1853,12 @@ namespace SimplerSNMP
             {
                 var item = treeView.SelectedItem as TreeViewItem;
 
-                string ipAdress = item.Header.ToString();
-                Task xcTask = new Task(() => { tableBrowserNext(ipAdress, 161, "public", "1.3.6.1.4.1.4987.1.1.1", 16, tableBrowserGrid); });
-                xcTask.Start();
+                string sHost = item.Header.ToString();
+                string tableName = tableIdList["sniConnTable"];
+                ezEdgeSystems ez = getEzSystems(sHost);
+
+                Task tableTask = new Task(() => { tableBrowserNext(ez, tableName, tableBrowserGrid); });
+                tableTask.Start();
             }
             catch (Exception)
             {
@@ -1831,10 +1931,16 @@ namespace SimplerSNMP
             {
                 var item = treeView.SelectedItem as TreeViewItem;
 
-                string ipAdress = item.Header.ToString();
-                Task alarmTask = new Task(() => { tableBrowserNext(ipAdress, 161, "public", "1.3.6.1.4.1.4987.1.11.4.1", 6, tableBrowserAlarm); });
-                alarmTask.Start();
+                string sHost = item.Header.ToString();
+                string tableName = tableIdList["sniActiveAlarmTable"];
+                ezEdgeSystems ez = getEzSystems(sHost);
+
+                Task tableTask = new Task(() => { tableBrowserNext(ez, tableName, tableBrowserAlarm); });
+                tableTask.Start();
+                
+
             }
+
             catch (Exception)
             {
 
@@ -2006,9 +2112,14 @@ namespace SimplerSNMP
         }
 
 
+
+
+
+
+
         #endregion
 
-
+        
 
         public static string GetLocalIPAddress()
         {
