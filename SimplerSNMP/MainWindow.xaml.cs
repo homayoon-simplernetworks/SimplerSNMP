@@ -30,6 +30,7 @@ using System.Reflection;
 using System.Globalization;
 using Microsoft.Win32;
 using System.Data.OleDb;
+using System.Net.NetworkInformation;
 
 namespace SimplerSNMP
 {
@@ -1445,7 +1446,7 @@ namespace SimplerSNMP
             Pdu pdu = new Pdu(PduType.GetNext);
             Dispatcher.BeginInvoke(DispatcherPriority.Normal, new Action(() =>
             {
-                AppendTextToOutput("Start getting XC table for :  " + tHost);
+                AppendTextToOutput("Start getting table for :  " + tHost);
             }));
 
             try
@@ -1566,7 +1567,7 @@ namespace SimplerSNMP
 
                  Dispatcher.BeginInvoke(DispatcherPriority.Normal, new Action(() =>
                       {
-                          AppendTextToOutput("we have reached the end of the XC requested MIB tree. ");
+                          AppendTextToOutput("we have reached the end of SNMP requested MIB tree. ");
                       }));
                  Dispatcher.BeginInvoke(DispatcherPriority.Normal, new Action(() =>
                 {
@@ -1600,13 +1601,12 @@ namespace SimplerSNMP
         }
 
 
-        public async void tableBrowserNext(ezEdgeSystems ez ,string tableId, DataGrid dg)
+        public  void tableBrowserNext(ezEdgeSystems ez ,string tableId, DataGrid dg)
         {
-            //check if still selected system is same as tHost
-            string selectedHost = "";
+           
 
             //clean table 
-            await Dispatcher.BeginInvoke(DispatcherPriority.Normal, new Action(() =>
+             Dispatcher.BeginInvoke(DispatcherPriority.Normal, new Action(() =>
             {
                 dg.ItemsSource = null;
                 dg.IsEnabled = false;
@@ -1662,22 +1662,13 @@ namespace SimplerSNMP
             }
             rootOid = new Oid(lastOidList[0].ToString().Remove(lastOidList[0].ToString().Length - 2));
 
-           /* for (int i = 1; i <= columnNumber; i++)
-            {
-                lastOid.Add(i);
-                lastOidList.Add(lastOid);
-                lastOid = (Oid)rootOid.Clone();
-
-
-                dataTable.Columns.Add("column" + i.ToString());
-            }
-            */
+           
 
             // Pdu class used for all requests
             Pdu pdu = new Pdu(PduType.GetNext);
             Dispatcher.BeginInvoke(DispatcherPriority.Normal, new Action(() =>
             {
-                AppendTextToOutput("Start getting XC table for :  " + ez.Host);
+                AppendTextToOutput("Start getting table for :  " + ez.Host);
             }));
 
             try
@@ -1720,14 +1711,11 @@ namespace SimplerSNMP
                         // the Agent - see SnmpConstants for error definitions
                         if (result.Pdu.ErrorStatus != 0)
                         {
-                            await
-                                                    // agent reported an error with the request
-
-
-                                                    Dispatcher.BeginInvoke(DispatcherPriority.Normal, new Action(() =>
-                                                    {
-                                                        AppendTextToOutput("table browser : Error in SNMP reply.Error  (" + ez.Host + ") " + result.Pdu.ErrorStatus + " : " + result.Pdu.ErrorIndex);
-                                                    }));
+                            // agent reported an error with the request
+                            Dispatcher.BeginInvoke(DispatcherPriority.Normal, new Action(() =>
+                            {
+                              AppendTextToOutput("table browser : Error in SNMP reply.Error  (" + ez.Host + ") " + result.Pdu.ErrorStatus + " : " + result.Pdu.ErrorIndex);
+                             }));
 
                             lastOid = null;
                             break;
@@ -1743,10 +1731,6 @@ namespace SimplerSNMP
                                 if (rootOid.IsRootOf(v.Oid))
                                 {
 
-
-
-
-
                                     columnList.Add(v.Value.ToString());
                                     lastOid = v.Oid;
                                     lastOidList.Add(lastOid);
@@ -1756,8 +1740,6 @@ namespace SimplerSNMP
                                     // we have reached the end of the requested
                                     // MIB tree. Set lastOid to null and exit loop
 
-
-
                                     lastOid = null;
                                 }
 
@@ -1766,28 +1748,15 @@ namespace SimplerSNMP
                             if (lastOid != null)
                             {
                                 dataTable.Rows.Add(columnList.ToArray());
-                                await Dispatcher.BeginInvoke(DispatcherPriority.Normal, new Action(() =>
+                                Dispatcher.BeginInvoke(DispatcherPriority.Normal, new Action(() =>
                                 {
-                                    var item = treeView.SelectedItem as TreeViewItem;
-                                    selectedHost = item.Header.ToString();
-
+                                   dg.ItemsSource = null;
+                                   dg.ItemsSource = dataTable.DefaultView;
 
                                 }));
-                                if (selectedHost == ez.Host)
-                                {
-                                    await Dispatcher.BeginInvoke(DispatcherPriority.Normal, new Action(() =>
-                                    {
-                                        dg.ItemsSource = null;
-                                        dg.ItemsSource = dataTable.DefaultView;
-
-                                    }));
 
 
-                                }
-                                else
-                                {
-                                    break;
-                                }
+                               
 
 
 
@@ -1799,7 +1768,7 @@ namespace SimplerSNMP
                     }
                     else
                     {
-                        await Dispatcher.BeginInvoke(DispatcherPriority.Normal, new Action(() =>
+                         Dispatcher.BeginInvoke(DispatcherPriority.Normal, new Action(() =>
                         {
                             AppendTextToOutput("table browser : No response received from SNMP agent. (" + ez.Host + ") ");
                         }));
@@ -1809,7 +1778,7 @@ namespace SimplerSNMP
 
                 Dispatcher.BeginInvoke(DispatcherPriority.Normal, new Action(() =>
                 {
-                    AppendTextToOutput("we have reached the end of the XC requested MIB tree. ");
+                    AppendTextToOutput("we have reached the end of SNMP requested MIB tree. ");
                 }));
                 Dispatcher.BeginInvoke(DispatcherPriority.Normal, new Action(() =>
                 {
@@ -1827,7 +1796,7 @@ namespace SimplerSNMP
             }
             catch (Exception e)
             {
-                await Dispatcher.BeginInvoke(DispatcherPriority.Normal, new Action(() =>
+                 Dispatcher.BeginInvoke(DispatcherPriority.Normal, new Action(() =>
                 {
                     AppendTextToOutput("table browser ((in)) : (" + ez.Host + ") " + e.Message);
                 }));
@@ -1856,6 +1825,7 @@ namespace SimplerSNMP
                 string sHost = item.Header.ToString();
                 string tableName = tableIdList["sniConnTable"];
                 ezEdgeSystems ez = getEzSystems(sHost);
+                xcListLable.Content = "System: " + sHost;
 
                 Task tableTask = new Task(() => { tableBrowserNext(ez, tableName, tableBrowserGrid); });
                 tableTask.Start();
@@ -1881,6 +1851,7 @@ namespace SimplerSNMP
                 string sHost = item.Header.ToString();
                 string tableName = tableComboBox.SelectedValue.ToString();
                 ezEdgeSystems ez = getEzSystems(sHost);
+                tablesListLable.Content = "System: " + sHost;
 
                 Task tableTask = new Task(() => { tableBrowserNext(ez , tableName, xmlTestGrid); });
                 tableTask.Start();
@@ -1934,6 +1905,7 @@ namespace SimplerSNMP
                 string sHost = item.Header.ToString();
                 string tableName = tableIdList["sniActiveAlarmTable"];
                 ezEdgeSystems ez = getEzSystems(sHost);
+                alarmListLable.Content = "System: " + sHost;
 
                 Task tableTask = new Task(() => { tableBrowserNext(ez, tableName, tableBrowserAlarm); });
                 tableTask.Start();
@@ -2117,9 +2089,260 @@ namespace SimplerSNMP
 
 
 
+
+
         #endregion
 
-        
+        private void fullTestButton_Click(object sender, RoutedEventArgs e)
+        {
+            var item = treeView.SelectedItem as TreeViewItem;
+            string ipAdress = item.Header.ToString();
+            bool isOnline = false;
+
+            //check if system is online
+            isOnline = isOnlinePingTest(ipAdress);
+
+            if (isOnline)
+            {
+                ezEdgeSystems ez = new ezEdgeSystems();
+                ez = getEzSystems(ipAdress);
+
+                Thread fullTestThread = new Thread(new ThreadStart(() => { fullTestMethod(ez); }));
+                fullTestThread.IsBackground = true;
+                fullTestThread.Start();
+
+            }
+            else
+            {
+                Dispatcher.BeginInvoke(DispatcherPriority.Normal, new Action(() =>
+                {
+                    AppendTextToOutput(ipAdress + " system is not on-line Ping result:  " + isOnline);
+                    
+                }));
+            }
+            
+        }
+
+        public void fullTestMethod(ezEdgeSystems ez)
+        {
+            DataTable ShelfTable, CardTable;
+            string tableName = tableIdList["sniConnTable"];
+            ShelfTable = tableBrowserNext(ez, tableIdList["sniEntityShelfTable"]);
+            CardTable = tableBrowserNext(ez, tableIdList["sniEntityCardTable"]);
+            string outputPath = @"C:\logs\syslog\test1.csv";
+            outputCsvRow ocv = new outputCsvRow(outputPath, CardTable);
+            ocv.addTable();
+
+            /*
+            /* Store the syslog using a new thread 
+            new Thread(new outputCsvRow(outputPath + source + "_" + timestamp + "_syslog.csv", new string[] { source, log }).addRow).Start();
+            //for (int i = 0; i < emailTriggers.Count(); i++) { if (log.Contains(emailTriggers[i])) { emailEvent(); } }
+            /* Search for trigger strings and send email if found */
+
+            return;
+
+
+        }
+
+        public bool isOnlinePingTest(string sHost)
+        {
+            bool result = false;            
+            Ping pingSender = new Ping();
+            IpAddress address = new IpAddress(sHost);                       
+            PingReply reply = pingSender.Send((IPAddress)address);
+
+            if (reply.Status == IPStatus.Success)
+            {
+                result = true;
+            }
+            return result;
+        }
+
+        public DataTable tableBrowserNext(ezEdgeSystems ez, string tableId)
+        {
+
+
+            OctetString community = new OctetString(ez.Read_Community);
+
+            // Define agent parameters class
+            AgentParameters param = new AgentParameters(community);
+            // Set SNMP version to 1
+            param.Version = SnmpVersion.Ver1;
+            // Construct the agent address object
+            // IpAddress class is easy to use here because
+            //  it will try to resolve constructor parameter if it doesn't
+            //  parse to an IP address
+            IpAddress agent = new IpAddress(ez.Host);
+
+            // Construct target
+            UdpTarget target = new UdpTarget((IPAddress)agent, ez.Port, SNMPtimeout, SNMPretry);
+
+            // Define Oid that is the root of the MIB
+            //  tree you wish to retrieve
+            Oid rootOid = new Oid(prifixOID); // ifDescr
+
+            // This Oid represents last Oid returned by
+            //  the SNMP agent
+            Oid lastOid = (Oid)rootOid.Clone();
+
+
+            //list of variables in each column 
+            List<string> columnList = new List<string>();
+            DataTable dataTable = new DataTable();
+
+
+
+
+
+
+            List<Oid> lastOidList = new List<Oid>();
+
+            DataRow[] dr;
+            dr = columnProvider(tableId, ez.mibAddress);
+
+            foreach (DataRow r in dr)
+            {
+                lastOid.Add(r["oid"].ToString().Remove(0, 2));
+                lastOidList.Add(lastOid);
+
+                lastOid = (Oid)rootOid.Clone();
+                dataTable.Columns.Add(r["name"].ToString());
+
+            }
+            rootOid = new Oid(lastOidList[0].ToString().Remove(lastOidList[0].ToString().Length - 2));
+
+
+
+            // Pdu class used for all requests
+            Pdu pdu = new Pdu(PduType.GetNext);
+            Dispatcher.BeginInvoke(DispatcherPriority.Normal, new Action(() =>
+            {
+                AppendTextToOutput("Start getting XC table for :  " + ez.Host);
+            }));
+
+            try
+            {
+                // Loop through results
+                while (lastOid != null)
+                {
+                    // When Pdu class is first constructed, RequestId is set to a random value
+                    // that needs to be incremented on subsequent requests made using the
+                    // same instance of the Pdu class.
+                    if (pdu.RequestId != 0)
+                    {
+                        pdu.RequestId += 1;
+                    }
+                    // Clear Oids from the Pdu class.
+                    pdu.VbList.Clear();
+                    // Initialize request PDU with the last retrieved Oid
+
+
+                    pdu.VbList.Add(lastOidList);
+
+                    // Make SNMP request
+                    SnmpV1Packet result = null;
+
+
+
+                    result = (SnmpV1Packet)target.Request(pdu, param);
+
+
+
+
+
+                    // If result is null then agent didn't reply or we couldn't parse the reply.
+                    if (result != null)
+                    {
+
+
+
+                        // ErrorStatus other then 0 is an error returned by 
+                        // the Agent - see SnmpConstants for error definitions
+                        if (result.Pdu.ErrorStatus != 0)
+                        {
+                            // agent reported an error with the request
+                            Dispatcher.BeginInvoke(DispatcherPriority.Normal, new Action(() =>
+                            {
+                                AppendTextToOutput("table browser : Error in SNMP reply.Error  (" + ez.Host + ") " + result.Pdu.ErrorStatus + " : " + result.Pdu.ErrorIndex);
+                            }));
+
+                            lastOid = null;
+                            break;
+                        }
+                        else
+                        {
+                            // Walk through returned variable bindings
+                            lastOidList.Clear();
+                            columnList.Clear();
+                            foreach (Vb v in result.Pdu.VbList)
+                            {
+                                // Check that retrieved Oid is "child" of the root OID
+                                if (rootOid.IsRootOf(v.Oid))
+                                {
+
+                                    columnList.Add(v.Value.ToString());
+                                    lastOid = v.Oid;
+                                    lastOidList.Add(lastOid);
+                                }
+                                else
+                                {
+                                    // we have reached the end of the requested
+                                    // MIB tree. Set lastOid to null and exit loop
+
+                                    lastOid = null;
+                                }
+
+                            }
+
+                            if (lastOid != null)
+                            {
+                                dataTable.Rows.Add(columnList.ToArray());
+                             }
+
+                        }
+                    }
+                    else
+                    {
+                        Dispatcher.BeginInvoke(DispatcherPriority.Normal, new Action(() =>
+                        {
+                            AppendTextToOutput("table browser : No response received from SNMP agent. (" + ez.Host + ") ");
+                        }));
+                    }
+
+                }
+
+                Dispatcher.BeginInvoke(DispatcherPriority.Normal, new Action(() =>
+                {
+                    AppendTextToOutput("we have reached the end of SNMP requested MIB tree. ");
+                }));
+               
+
+
+                //
+
+
+
+                target.Close();
+                return dataTable;
+
+            }
+            catch (Exception e)
+            {
+                Dispatcher.BeginInvoke(DispatcherPriority.Normal, new Action(() =>
+                {
+                    AppendTextToOutput("table browser ((in)) : (" + ez.Host + ") " + e.Message);
+                }));
+                lastOid = null;
+                return dataTable;
+            }
+            finally
+            {
+                target.Close();
+                // Thread.CurrentThread.Abort();
+            }
+
+        }
+
 
         public static string GetLocalIPAddress()
         {
@@ -2190,6 +2413,7 @@ namespace SimplerSNMP
     {
         private string formattedRow = null;
         private string outputPath = null;
+        DataTable dataTable = null;
 
         public outputCsvRow(string filePath, string[] columns) /* Initialize object */
         {
@@ -2198,7 +2422,13 @@ namespace SimplerSNMP
             for (int i = 0; i < columns.Count(); i++) { formattedRow += "," + (char)34 + columns[i] + (char)34; }
         }
 
-       
+        public outputCsvRow(string filePath, DataTable dt) /* Initialize object */
+        {
+            dataTable = dt;
+            outputPath = filePath;
+            formattedRow = (char)34 + DateTime.Now.ToString() + (char)34; /* Construct csv row starting with the timestamp */
+            for (int i = 0; i < dataTable.Columns.Count; i++) { formattedRow += "," + (char)34 + dataTable.Columns[i].ColumnName + (char)34; }
+        }
 
         public void addRow(List<Tuple<string, string>> syslogList)
         {
@@ -2299,6 +2529,51 @@ namespace SimplerSNMP
             return;
         }
 
-       
+        public void addTable()
+        {
+            int attempts = 0;
+            bool canAccess = false;
+            StreamWriter logWriter = null;
+
+                      
+            /* Thread safety first! This is a poor man's SpinLock */
+            while (true)
+            {
+                try
+                {
+                    logWriter = new StreamWriter(outputPath, true); /* Try to open the file for writing */
+                    canAccess = true; /* Success! */
+                    break;
+                }
+                catch (IOException ex)
+                {
+
+                    if (attempts < 15)
+                    {
+                        Random random = new Random();
+                        int randomNumber = random.Next(0, 200);
+                        attempts++;
+                        Thread.Sleep(randomNumber);
+                    }
+                    else { Console.WriteLine(ex.ToString()); break; } /* Give up after 15 attempts */
+                }
+            }
+            if (canAccess) /* Write the line if the file is accessible */
+            {
+                logWriter.WriteLine(formattedRow);
+                for (int i = 0; i< dataTable.Rows.Count; i++)
+                {
+                    formattedRow = "";
+                    for (int ii = 0; ii < dataTable.Columns.Count; ii++) { formattedRow += "," + (char)34 + dataTable.Rows[i][ii].ToString() + (char)34; }
+                    logWriter.WriteLine(formattedRow);
+                }
+                logWriter.Close();
+                
+
+            }
+            return;
+        }
+
+
     }
 }//name space
