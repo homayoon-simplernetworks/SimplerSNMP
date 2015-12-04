@@ -40,33 +40,50 @@
                     </Grid.ColumnDefinitions>
 
 
+                    <Grid HorizontalAlignment="Left" Height="90" Margin="10,195,0,0" VerticalAlignment="Top" Width="621" Background="#FFD8D9DC">
+                        <TextBox x:Name="tapOutTapTextBox" HorizontalAlignment="Left" Height="23" Margin="252,38,0,0" TextWrapping="Wrap" Text="1" VerticalAlignment="Top" Width="39"/>
+                        <TextBox x:Name="tapInTapTextBox" HorizontalAlignment="Left" Height="23" Margin="308,38,0,0" TextWrapping="Wrap" Text="1" VerticalAlignment="Top" Width="39"/>
+                    </Grid>
+
+
                     <Grid HorizontalAlignment="Left" Height="66" Margin="10,124,0,0" VerticalAlignment="Top" Width="621" Background="#FFD8D9DC"/>
 
 
                     <Grid HorizontalAlignment="Left" Height="105" Margin="10,10,0,0" VerticalAlignment="Top" Width="621" Background="#FFD8D9DC"/>
 
 
-                    <TextBox x:Name="fromCard" HorizontalAlignment="Left" Height="23" Margin="86,43,0,0" TextWrapping="Wrap" Text="1" VerticalAlignment="Top" Width="44"/>
-                    <TextBox x:Name="fromPort" HorizontalAlignment="Left" Height="23" Margin="86,71,0,0" TextWrapping="Wrap" Text="1" VerticalAlignment="Top" Width="44"/>
-                    <TextBox x:Name="toCard" HorizontalAlignment="Left" Height="23" Margin="178,44,0,0" TextWrapping="Wrap" Text="1" VerticalAlignment="Top" Width="39"/>
-                    <TextBox x:Name="toPort" HorizontalAlignment="Left" Height="23" Margin="178,71,0,0" TextWrapping="Wrap" Text="101" VerticalAlignment="Top" Width="39"/>
+                    <TextBox x:Name="fromCard" HorizontalAlignment="Left" Height="23" Margin="86,48,0,0" TextWrapping="Wrap" Text="1" VerticalAlignment="Top" Width="44"/>
+                    <TextBox x:Name="fromPort" HorizontalAlignment="Left" Height="23" Margin="86,76,0,0" TextWrapping="Wrap" Text="1" VerticalAlignment="Top" Width="44"/>
+                    <TextBox x:Name="toCard" HorizontalAlignment="Left" Height="23" Margin="178,49,0,0" TextWrapping="Wrap" Text="1" VerticalAlignment="Top" Width="39"/>
+                    <TextBox x:Name="toPort" HorizontalAlignment="Left" Height="23" Margin="178,76,0,0" TextWrapping="Wrap" Text="101" VerticalAlignment="Top" Width="39"/>
                     <TextBox x:Name="crossNumber" HorizontalAlignment="Left" Height="23" Margin="263,44,0,0" TextWrapping="Wrap" Text="5" VerticalAlignment="Top" Width="70"/>
-                    <Button x:Name="createCross" Content="Add XC" HorizontalAlignment="Center" Margin="524,29,42,0" VerticalAlignment="Top" Width="75" Click="createCross_Click"/>
-                    <Button x:Name="delCross" Content="Delete XC" HorizontalAlignment="Center" Margin="524,56,42,0" VerticalAlignment="Top" Width="75" Click="delCross_Click" RenderTransformOrigin="-0.632,0.625"/>
-                    <RadioButton x:Name="rDown" Content="Down" HorizontalAlignment="Left" Margin="399,68,0,0" VerticalAlignment="Top"/>
-                    <RadioButton x:Name="rUp" Content="UP" HorizontalAlignment="Left" Margin="399,49,0,0" VerticalAlignment="Top" IsChecked="True"/>
-                    <Label x:Name="SUB" Content="Sub" Margin="91,18,516,0" VerticalAlignment="Top" RenderTransformOrigin="-0.825,0.449"/>
-                    <Label x:Name="OE" Content="OE" HorizontalAlignment="Left" Margin="183,18,0,0" VerticalAlignment="Top"/>
-                    <Label x:Name="From_Copy1" Content="Card" HorizontalAlignment="Left" Margin="46,40,0,0" VerticalAlignment="Top"/>
-                    <Label x:Name="From_Copy2" Content="Port" HorizontalAlignment="Left" Margin="47,67,0,0" VerticalAlignment="Top"/>
-                    <Button x:Name="delCrossAll" Content="Del All XC" HorizontalAlignment="Center" Margin="524,81,42,0" VerticalAlignment="Top" Width="75" Click="delCrossAll_Click"/>
+                    <Button x:Name="createCross" Content="Add XC" HorizontalAlignment="Center" Margin="524,16,42,0" VerticalAlignment="Top" Width="75" Click="createCross_Click"/>
+                    <Button x:Name="delCross" Content="Delete XC" HorizontalAlignment="Center" Margin="524,40,42,0" VerticalAlignment="Top" Width="75" Click="delCross_Click" RenderTransformOrigin="-0.632,0.625"/>
+                    <RadioButton x:Name="rDown" Content="Down" HorizontalAlignment="Left" Margin="399,38,0,0" VerticalAlignment="Top"/>
+                    <RadioButton x:Name="rUp" Content="UP" HorizontalAlignment="Left" Margin="399,19,0,0" VerticalAlignment="Top" IsChecked="True"/>
+                    <Label x:Name="SUB" Content="Sub" Margin="91,23,516,0" VerticalAlignment="Top" RenderTransformOrigin="-0.825,0.449"/>
+                    <Label x:Name="OE" Content="OE" HorizontalAlignment="Left" Margin="183,23,0,0" VerticalAlignment="Top"/>
+                    <Label x:Name="From_Copy1" Content="Card" HorizontalAlignment="Left" Margin="46,45,0,0" VerticalAlignment="Top"/>
+                    <Label x:Name="From_Copy2" Content="Port" HorizontalAlignment="Left" Margin="47,72,0,0" VerticalAlignment="Top"/>
+                    <Button x:Name="delCrossAll" Content="Del All XC" HorizontalAlignment="Center" Margin="524,64,42,0" VerticalAlignment="Top" Width="75" Click="delCrossAll_Click"/>
                     <Label x:Name="numXCtodo" Content="How many XC" HorizontalAlignment="Left" Margin="257,18,0,0" VerticalAlignment="Top"/>
                     <TextBox x:Name="xcFileTextBox" HorizontalAlignment="Left" Height="23" Margin="96,144,0,0" VerticalAlignment="Top" Width="371" MaxLines="1" FontStretch="Condensed" ToolTip="mib file should be in xml format, use this command(linux): smidump -k -f xml  SIMPLER-NETWORKS-MIB_b279.my &gt; simplerMib_b279.xml 2&gt;null"/>
                     <Button x:Name="importXCButton" Content="Import XC" HorizontalAlignment="Left" Margin="524,144,0,0" VerticalAlignment="Top" Width="75" Height="23" ToolTip="mib file should be in xml format, use this command(linux): smidump -k -f xml  SIMPLER-NETWORKS-MIB_b279.my &gt; simplerMib_b279.xml 2&gt;null" Click="importXCButton_Click"/>
                     <Label x:Name="xcLable" Content="XC  Script" HorizontalAlignment="Right" Margin="0,144,550,0" VerticalAlignment="Top" ToolTip="mib file should be in xml format, use this command(linux): smidump -k -f xml  SIMPLER-NETWORKS-MIB_b279.my &gt; simplerMib_b279.xml 2&gt;null"/>
                     <Button x:Name="fileBrowser_Copy" Content="&gt;&gt;" HorizontalAlignment="Left" Margin="472,144,0,0" VerticalAlignment="Top" Width="24" Height="23" Click="fileBrowser_Click" ToolTip="mib file should be in xml format, use this command(linux): smidump -k -f xml  SIMPLER-NETWORKS-MIB_b279.my &gt; simplerMib_b279.xml 2&gt;null"/>
-                    <Grid HorizontalAlignment="Left" Height="66" Margin="10,197,0,0" VerticalAlignment="Top" Width="621" Background="#FFD8D9DC"/>
-                    <Button x:Name="fullTestButton" Content="Full Test" HorizontalAlignment="Left" Margin="524,218,0,0" VerticalAlignment="Top" Width="75" Height="23" ToolTip="mib file should be in xml format, use this command(linux): smidump -k -f xml  SIMPLER-NETWORKS-MIB_b279.my &gt; simplerMib_b279.xml 2&gt;null" Click="fullTestButton_Click"/>
+                    <Grid HorizontalAlignment="Left" Height="66" Margin="10,289,0,0" VerticalAlignment="Top" Width="621" Background="#FFD8D9DC"/>
+                    <Button x:Name="fullTestButton" Content="Full Test" HorizontalAlignment="Left" Margin="524,305,0,0" VerticalAlignment="Top" Width="75" Height="23" ToolTip="mib file should be in xml format, use this command(linux): smidump -k -f xml  SIMPLER-NETWORKS-MIB_b279.my &gt; simplerMib_b279.xml 2&gt;null" Click="fullTestButton_Click"/>
+                    <Button x:Name="SetTapButton" Content="Set Tap" HorizontalAlignment="Center" Margin="524,217,42,0" VerticalAlignment="Top" Width="75" Click="SetTapButton_Click"/>
+                    <TextBox x:Name="fromCardTapTextBox" HorizontalAlignment="Left" Height="23" Margin="70,224,0,0" TextWrapping="Wrap" Text="1" VerticalAlignment="Top" Width="44"/>
+                    <TextBox x:Name="fromPortTapTextBox" HorizontalAlignment="Left" Height="23" Margin="70,252,0,0" TextWrapping="Wrap" Text="1" VerticalAlignment="Top" Width="44"/>
+                    <TextBox x:Name="toCardTapTextBox" HorizontalAlignment="Left" Height="23" Margin="162,225,0,0" TextWrapping="Wrap" Text="1" VerticalAlignment="Top" Width="39"/>
+                    <TextBox x:Name="toPortTapTextBox" HorizontalAlignment="Left" Height="23" Margin="162,252,0,0" TextWrapping="Wrap" Text="101" VerticalAlignment="Top" Width="39"/>
+                    <Label x:Name="SUB_Copy" Content="Sub" Margin="75,199,532,0" VerticalAlignment="Top" RenderTransformOrigin="-0.825,0.449"/>
+                    <Label x:Name="OE_Copy" Content="OE" HorizontalAlignment="Left" Margin="167,199,0,0" VerticalAlignment="Top"/>
+                    <Label x:Name="From_Copy" Content="Card" HorizontalAlignment="Left" Margin="30,221,0,0" VerticalAlignment="Top"/>
+                    <Label x:Name="From_Copy3" Content="Port" HorizontalAlignment="Left" Margin="31,248,0,0" VerticalAlignment="Top"/>
+                    <Label x:Name="OE_Copy1" Content="Tap Out" HorizontalAlignment="Left" Margin="256,209,0,0" VerticalAlignment="Top"/>
+                    <Label x:Name="OE_Copy2" Content="Tap In" HorizontalAlignment="Left" Margin="316,209,0,0" VerticalAlignment="Top"/>
                 </Grid>
             </TabItem>
             <TabItem Header="ServiceAlarms" Margin="-3,0,3,0" VerticalAlignment="Bottom" Height="24">

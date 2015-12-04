@@ -1,4 +1,5 @@
-﻿using System;
+﻿using SnmpSharpNet;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
@@ -26,16 +27,21 @@ namespace SimplerSNMP
             InitializeComponent();
             button.IsEnabled = false;
         }
-        public static string GetLocalIPAddress()
+        public static string GetLocalIPAddress(string sHost)
         {
-            var host = Dns.GetHostEntry(Dns.GetHostName());
-            foreach (var ip in host.AddressList)
+            IPAddress host = IPAddress.None;
+            IPAddress ezIP = IPAddress.None;
+
+            IpAddress address = new IpAddress(sHost);
+            ezIP = (IPAddress)address;
+
+            foreach (IPAddress ip in Dns.GetHostAddresses(Dns.GetHostName()))
             {
-                if (ip.AddressFamily == AddressFamily.InterNetwork)
-                {
-                    return ip.ToString();
-                }
+                host = ip;
+                if (ip.AddressFamily == ezIP.AddressFamily)
+                    break;
             }
+            return host.ToString();
             throw new Exception("Local IP Address Not Found!");
         }
         private void button_Click(object sender, RoutedEventArgs e)
@@ -50,17 +56,19 @@ namespace SimplerSNMP
             sy.Write_Community = wcTextbox.Text;
             sy.mibAddress = mibFileTextBox.Text;
 
-
+            string localHost = GetLocalIPAddress(sy.Host);
             ezp.setSystems(sy, "ez_systems.xml");
 
             foreach (Window window in Application.Current.Windows)
             {
                 if (window.GetType() == typeof(MainWindow))
                 {
-                    (window as MainWindow).treeViewAdd(ipTextBox.Text);
-                    Task trapTableAdd = new Task(new Action(() => { (window as MainWindow).addRemoveTrapdestination(sy.Host, sy.Port, GetLocalIPAddress(), sy.Read_Community, sy.Write_Community, 4); }));
-                    trapTableAdd.Start();
                     
+                    Task trapTableAdd = new Task(new Action(() => { (window as MainWindow).addRemoveTrapdestination(sy.Host, sy.Port, localHost, sy.Read_Community, sy.Write_Community, 4); }));
+                    trapTableAdd.Start();
+
+                    (window as MainWindow).treeVeiwRefresh();
+
                 }
                 
             }

@@ -122,6 +122,8 @@ namespace SimplerSNMP
             dt.Rows.Add(dr);
             dt.WriteXml(fn);
 
+            
+
         }
         public void removeSystems(string rHost, string fn)
         {
@@ -331,6 +333,14 @@ namespace SimplerSNMP
             return ezSystemList[0];
         }
 
+        public void treeVeiwRefresh()
+        {
+            Dispatcher.BeginInvoke(DispatcherPriority.Normal, new Action(() =>
+            {
+                treeviewLoader(treeView, "ez_systems.xml");
+            }));
+            
+        }
 
         private void treeviewLoader(TreeView tv, string fn)
         {
@@ -359,6 +369,7 @@ namespace SimplerSNMP
 
 
                     treeItem.Header = dr["Host"];
+                    
                     eze.Host = dr["Host"].ToString();
                     eze.Port = Int16.Parse( dr["Port"].ToString());                 ;
                     eze.Write_Community = dr["Write_Community"].ToString();
@@ -556,7 +567,7 @@ namespace SimplerSNMP
         public string crossConnection(string ipAdd, int sPort, string originCard, string originPort, string destCard, string destPort , string serviceID, string cirutId , string tableOid, string WriteComminuty , int addDel)
         {
             // Prepare target
-            UdpTarget target = new UdpTarget((IPAddress)new IpAddress(ipAdd), sPort, 15000, 0);
+            UdpTarget target = new UdpTarget((IPAddress)new IpAddress(ipAdd), sPort, SNMPtimeout, SNMPretry);
             // Create a SET PDU
             Pdu pdu = new Pdu(PduType.Set);
 
@@ -586,6 +597,111 @@ namespace SimplerSNMP
                 pdu.VbList.Add(new Oid(tableOid + "12." + crossJumper + serviceID), new OctetString(cirutId));
             }
             
+
+            // Set Agent security parameters
+            AgentParameters aparam = new AgentParameters(SnmpVersion.Ver2, new OctetString(WriteComminuty));
+
+            // Response packet
+            SnmpV2Packet response;
+            try
+            {
+                // Send request and wait for response
+                response = target.Request(pdu, aparam) as SnmpV2Packet;
+
+                Dispatcher.BeginInvoke(DispatcherPriority.Normal, new Action(() =>
+                {
+                    AppendTextToOutput("response :  (" + ipAdd + ") " + response);
+                }));
+
+            }
+            catch (Exception ex)
+            {
+                // If exception happens, it will be returned here
+
+                Dispatcher.BeginInvoke(DispatcherPriority.Normal, new Action(() =>
+                {
+                    AppendTextToOutput(System.String.Format("Request failed with exception: {0} (" + ipAdd + ") ", ex.Message));
+                }));
+                return "error";
+            }
+            // Make sure we received a response
+            if (response == null)
+            {
+                Dispatcher.BeginInvoke(DispatcherPriority.Normal, new Action(() =>
+                {
+                    AppendTextToOutput("Error in sending SNMP request. (" + ipAdd + ") ");
+                }));
+                return "error";
+            }
+            else
+            {
+                // Check if we received an SNMP error from the agent
+                if (response.Pdu.ErrorStatus != 0)
+                {
+
+                    Dispatcher.BeginInvoke(DispatcherPriority.Normal, new Action(() =>
+                    {
+                        AppendTextToOutput(System.String.Format("(" + ipAdd + ")SNMP agent returned ErrorStatus {0} on index {1}",
+                        response.Pdu.ErrorStatus, response.Pdu.ErrorIndex));
+                    }));
+                    return "error";
+                }
+                else
+                {
+                    // Everything is ok. Agent will return the new value for the OID we changed
+                    return response.ToString();
+
+                }
+            }
+        }
+
+        public string tapConnection(string ipAdd, int sPort, string originCard, string originPort, string destCard, string destPort, string tableOid, string WriteComminuty, string tapOut , string tapIn )
+        {
+            // Prepare target
+            UdpTarget target = new UdpTarget((IPAddress)new IpAddress(ipAdd), sPort, SNMPtimeout, SNMPretry);
+            // Create a SET PDU
+            Pdu pdu = new Pdu(PduType.Set);
+
+
+
+            // Set sysLocation.0 to a new string
+            originCard += ".";
+            originPort += ".";
+            destCard += ".";
+            destPort += ".";
+            string crossJumper = originCard + originPort + destCard + destPort;
+
+            Dispatcher.BeginInvoke(DispatcherPriority.Normal, new Action(() =>
+            {
+                AppendTextToOutput("create Tap :  (" + ipAdd + ") " + crossJumper);
+            }));
+
+
+
+
+            try
+            {
+                // Set a value to integer
+                int itapout = Int32.Parse(tapOut.Trim());
+                pdu.VbList.Add(new Oid(tableOid + "6." + crossJumper + "2"), new Integer32(itapout));
+            }
+            catch
+            {
+                pdu.VbList.Add(new Oid(tableOid + "6." + crossJumper + "2"), new Integer32(0));
+            }
+
+
+            try
+            {
+                // Set a value to unsigned integer
+                int itapin = Int32.Parse(tapIn.Trim());
+                pdu.VbList.Add(new Oid(tableOid + "7." + crossJumper + "2"), new Integer32(itapin));
+            }
+            catch
+            {
+                pdu.VbList.Add(new Oid(tableOid + "7." + crossJumper + "2"), new Integer32(0));
+            }
+
 
             // Set Agent security parameters
             AgentParameters aparam = new AgentParameters(SnmpVersion.Ver2, new OctetString(WriteComminuty));
@@ -2101,7 +2217,7 @@ namespace SimplerSNMP
 
             //check if system is online
             isOnline = isOnlinePingTest(ipAdress);
-
+           
             if (isOnline)
             {
                 ezEdgeSystems ez = new ezEdgeSystems();
@@ -2150,12 +2266,30 @@ namespace SimplerSNMP
             Ping pingSender = new Ping();
             IpAddress address = new IpAddress(sHost);                       
             PingReply reply = pingSender.Send((IPAddress)address);
-
+                        
             if (reply.Status == IPStatus.Success)
             {
                 result = true;
             }
             return result;
+        }
+
+        public IPAddress localIpAddress(string sHost)
+        {
+
+            IPAddress host = IPAddress.None;
+            IPAddress ezIP = IPAddress.None;
+
+            IpAddress address = new IpAddress(sHost);
+            ezIP = (IPAddress)address;
+
+            foreach (IPAddress ip in Dns.GetHostAddresses(Dns.GetHostName()))
+            {
+                host = ip;
+                if (ip.AddressFamily == ezIP.AddressFamily)
+                    break;
+            }
+            return host;
         }
 
         public DataTable tableBrowserNext(ezEdgeSystems ez, string tableId)
@@ -2343,6 +2477,35 @@ namespace SimplerSNMP
 
         }
 
+        private void SetTapButton_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                
+                string originCard = fromCardTapTextBox.Text;
+                string originPort = fromPortTapTextBox.Text;
+                string destCard = toCardTapTextBox.Text;
+                string destPort = toPortTapTextBox.Text;
+                string tapOut = tapOutTapTextBox.Text;
+                string tapIn = tapInTapTextBox.Text;
+
+                
+
+                ezEdgeSystems ez;
+                ez = currentEzEdgeSystem();
+
+
+                Task task = new Task(() => { tapConnection( ez.Host,  ez.Port, originCard, originPort,  destCard,  destPort, ConnectionTable,  ez.Write_Community, tapOut, tapIn); });
+                task.Start();
+            }
+            catch (Exception)
+            {
+
+
+                pleaseSelectEz pl = new pleaseSelectEz();
+                pl.Show();
+            }
+        }
 
         public static string GetLocalIPAddress()
         {
